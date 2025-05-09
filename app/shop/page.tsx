@@ -1,5 +1,5 @@
-import { ProductsGrid } from '@/components/product/products-grid';
 import { ProductFilters } from '@/components/product/product-filters';
+import ClientPage from './client-page';
 import connectToDatabase from '@/app/lib/mongodb';
 import Product from '@/app/models/Product';
 
@@ -9,15 +9,20 @@ export const metadata = {
 };
 
 // This makes this a Server Component
-export default async function ShopPage() {
+export default async function ShopPage({
+  searchParams,
+}: {
+  searchParams?: { search?: string };
+}) {
+  const searchTerm = searchParams?.search || '';
+  
   // Connect to MongoDB
   await connectToDatabase();
   
-  // Fetch products from the database
-  const dbProducts = await Product.find({}).limit(28);
+  // Fetch products from MongoDB
+  const dbProducts = await Product.find({}).limit(50);
   
-  // Transform MongoDB documents to the expected format for our components
-  // MongoDB uses _id, but our components expect id
+  // Transform MongoDB documents to the format expected by our components
   const products = dbProducts.map(product => {
     const productObj = product.toObject();
     return {
@@ -25,12 +30,11 @@ export default async function ShopPage() {
       name: productObj.name,
       price: productObj.price,
       category: productObj.category,
+      categorySlug: productObj.categorySlug,
+      subCategory: productObj.subCategory,
       rating: productObj.rating,
       image: productObj.image,
       description: productObj.description,
-      // Include any other fields needed
-      categorySlug: productObj.categorySlug,
-      subCategory: productObj.subCategory,
     };
   });
   
@@ -38,9 +42,13 @@ export default async function ShopPage() {
     <div className="container px-4 md:px-6 py-6 md:py-10">
       <div className="flex flex-col space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Shop All Products</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {searchTerm ? `Search Results: "${searchTerm}"` : 'Shop All Products'}
+          </h1>
           <p className="mt-2 text-muted-foreground">
-            Browse our complete collection of premium products
+            {searchTerm 
+              ? `Showing results for "${searchTerm}"`
+              : 'Browse our complete collection of premium products'}
           </p>
         </div>
         
@@ -49,24 +57,7 @@ export default async function ShopPage() {
             <ProductFilters />
           </aside>
           
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Showing <strong>{products.length}</strong> products
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Sort by:</span>
-                <select className="h-8 w-[180px] rounded-md border border-input bg-background px-3 py-1 text-sm">
-                  <option value="newest">Newest First</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="best-rated">Best Rated</option>
-                </select>
-              </div>
-            </div>
-            
-            <ProductsGrid products={products} />
-          </div>
+          <ClientPage products={products} />
         </div>
       </div>
     </div>

@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/product/product-card';
 
 interface Product {
   id: string;
+  _id?: string;
   name: string;
   price: number;
   category: string;
@@ -18,6 +20,8 @@ interface ProductsGridProps {
 }
 
 export function ProductsGrid({ products }: ProductsGridProps) {
+  const router = useRouter();
+  
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -32,6 +36,13 @@ export function ProductsGrid({ products }: ProductsGridProps) {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   };
+  
+  const handleProductClick = (product: Product) => {
+    const productId = product.id || product._id;
+    if (!productId) return;
+    
+    router.push(`/product/${productId}`);
+  };
 
   return (
     <motion.div 
@@ -41,7 +52,12 @@ export function ProductsGrid({ products }: ProductsGridProps) {
       animate="show"
     >
       {products.map((product) => (
-        <motion.div key={product.id} variants={item}>
+        <motion.div 
+          key={product.id || product._id} 
+          variants={item}
+          onClick={() => handleProductClick(product)}
+          className="cursor-pointer"
+        >
           <ProductCard product={product} />
         </motion.div>
       ))}

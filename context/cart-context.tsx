@@ -7,6 +7,7 @@ interface Product {
   name: string;
   price: number;
   image: string;
+  quantity?: number;
   [key: string]: any;
 }
 
@@ -47,19 +48,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [cartItems]);
   
   const addToCart = (product: Product) => {
+    // Get the quantity from the product or default to 1
+    const quantityToAdd = product.quantity || 1;
+    
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === product.id);
       
       if (existingItem) {
-        // If item exists, increase quantity
+        // If item exists, replace its quantity with the new one or add to existing quantity
         return prevItems.map(item => 
           item.id === product.id 
-            ? { ...item, quantity: item.quantity + 1 } 
+            ? { ...item, quantity: quantityToAdd } 
             : item
         );
       } else {
-        // Add new item with quantity of 1
-        return [...prevItems, { ...product, quantity: 1 }];
+        // Add new item with specified quantity or default to 1
+        return [...prevItems, { ...product, quantity: quantityToAdd }];
       }
     });
   };
