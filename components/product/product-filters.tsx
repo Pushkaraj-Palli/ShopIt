@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -8,19 +9,113 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { formatPrice } from '@/app/lib/utils';
 
 export function ProductFilters() {
-  const [priceRange, setPriceRange] = useState([0, 50000]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const initialCategory = searchParams.get('category') || '';
+  const initialMinPrice = searchParams.get('minPrice') ? parseInt(searchParams.get('minPrice')!) : 0;
+  const initialMaxPrice = searchParams.get('maxPrice') ? parseInt(searchParams.get('maxPrice')!) : 50000;
+  
+  const [priceRange, setPriceRange] = useState([initialMinPrice, initialMaxPrice]);
   const [expandedSections, setExpandedSections] = useState({
     categories: true,
     priceRange: true,
     brands: true,
     ratings: true,
   });
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+
+  // Update when URL params change
+  useEffect(() => {
+    setSelectedCategory(searchParams.get('category') || '');
+    
+    // Update price range from URL params
+    const minPrice = searchParams.get('minPrice') ? parseInt(searchParams.get('minPrice')!) : 0;
+    const maxPrice = searchParams.get('maxPrice') ? parseInt(searchParams.get('maxPrice')!) : 50000;
+    setPriceRange([minPrice, maxPrice]);
+  }, [searchParams]);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections({
       ...expandedSections,
       [section]: !expandedSections[section],
     });
+  };
+  
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    
+    // Update URL with selected category
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (category && category !== 'all') {
+      params.set('category', category);
+    } else {
+      params.delete('category');
+    }
+    
+    // Keep existing search term if any
+    const search = searchParams.get('search');
+    if (search) {
+      params.set('search', search);
+    }
+    
+    // Keep price range filters
+    if (priceRange[0] > 0) {
+      params.set('minPrice', priceRange[0].toString());
+    }
+    if (priceRange[1] < 50000) {
+      params.set('maxPrice', priceRange[1].toString());
+    }
+    
+    // Navigate with the updated params
+    router.push(`/shop?${params.toString()}`);
+  };
+  
+  // Debounced price range handler
+  const handlePriceRangeChange = (value: number[]) => {
+    setPriceRange(value);
+  };
+  
+  // Apply price filter when slider interaction ends
+  const handlePriceRangeCommit = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    // For price range, we always want to show products from 0 to maxPrice
+    // when only the upper handle is adjusted
+    
+    // Only add minPrice if it's not the default (0)
+    if (priceRange[0] > 0) {
+      params.set('minPrice', priceRange[0].toString());
+    } else {
+      params.delete('minPrice');
+    }
+    
+    // Only add maxPrice if it's not the default (50000)
+    if (priceRange[1] < 50000) {
+      params.set('maxPrice', priceRange[1].toString());
+      
+      // If only maxPrice is set, we want to show products from 0 to maxPrice
+      if (priceRange[0] === 0) {
+        params.delete('minPrice');
+      }
+    } else {
+      params.delete('maxPrice');
+    }
+    
+    // Keep category if any
+    if (selectedCategory && selectedCategory !== 'all') {
+      params.set('category', selectedCategory);
+    }
+    
+    // Keep search term if any
+    const search = searchParams.get('search');
+    if (search) {
+      params.set('search', search);
+    }
+    
+    // Navigate with the updated params
+    router.push(`/shop?${params.toString()}`);
   };
 
   return (
@@ -42,23 +137,43 @@ export function ProductFilters() {
         {expandedSections.categories && (
           <div className="mt-3 space-y-2">
             <div className="flex items-center space-x-2">
-              <Checkbox id="cat-all" />
+              <Checkbox 
+                id="cat-all" 
+                checked={selectedCategory === '' || selectedCategory === 'all'}
+                onCheckedChange={() => handleCategoryChange('all')}
+              />
               <label htmlFor="cat-all" className="text-sm">All Categories</label>
             </div>
             <div className="flex items-center space-x-2">
-              <Checkbox id="cat-electronics" />
+              <Checkbox 
+                id="cat-electronics" 
+                checked={selectedCategory === 'electronics'}
+                onCheckedChange={() => handleCategoryChange('electronics')}
+              />
               <label htmlFor="cat-electronics" className="text-sm">Electronics</label>
             </div>
             <div className="flex items-center space-x-2">
-              <Checkbox id="cat-clothing" />
+              <Checkbox 
+                id="cat-clothing" 
+                checked={selectedCategory === 'clothing'}
+                onCheckedChange={() => handleCategoryChange('clothing')}
+              />
               <label htmlFor="cat-clothing" className="text-sm">Clothing</label>
             </div>
             <div className="flex items-center space-x-2">
-              <Checkbox id="cat-accessories" />
+              <Checkbox 
+                id="cat-accessories" 
+                checked={selectedCategory === 'accessories'}
+                onCheckedChange={() => handleCategoryChange('accessories')}
+              />
               <label htmlFor="cat-accessories" className="text-sm">Accessories</label>
             </div>
             <div className="flex items-center space-x-2">
-              <Checkbox id="cat-home" />
+              <Checkbox 
+                id="cat-home" 
+                checked={selectedCategory === 'home'}
+                onCheckedChange={() => handleCategoryChange('home')}
+              />
               <label htmlFor="cat-home" className="text-sm">Home & Living</label>
             </div>
           </div>
@@ -83,14 +198,15 @@ export function ProductFilters() {
           <div className="mt-4 px-1">
             <Slider
               defaultValue={[0, 50000]}
-              max={100000}
+              max={50000}
               step={1000}
               value={priceRange}
-              onValueChange={(value: number[]) => setPriceRange(value)}
+              onValueChange={handlePriceRangeChange}
+              onValueCommit={handlePriceRangeCommit}
             />
             <div className="mt-2 flex items-center justify-between">
               <span className="text-sm">{formatPrice(priceRange[0])}</span>
-              <span className="text-sm">{formatPrice(priceRange[1])}+</span>
+              <span className="text-sm">{priceRange[1] === 50000 ? `${formatPrice(priceRange[1])}+` : formatPrice(priceRange[1])}</span>
             </div>
           </div>
         )}
@@ -172,8 +288,23 @@ export function ProductFilters() {
         )}
       </div>
       
-      <Button className="w-full">Apply Filters</Button>
-      <Button variant="outline" className="w-full">Reset Filters</Button>
+      <Button 
+        variant="outline" 
+        className="w-full"
+        onClick={() => {
+          // Reset all filters
+          const search = searchParams.get('search');
+          if (search) {
+            router.push(`/shop?search=${search}`);
+          } else {
+            router.push('/shop');
+          }
+          setSelectedCategory('');
+          setPriceRange([0, 50000]);
+        }}
+      >
+        Reset Filters
+      </Button>
     </div>
   );
 }
