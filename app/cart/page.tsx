@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, Minus, Plus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatPrice } from '@/app/lib/utils';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, subtotal } = useCart();
@@ -107,14 +108,14 @@ export default function CartPage() {
                             {item.category}
                           </div>
                           <div className="mt-2 text-sm font-medium md:hidden">
-                            ${item.price.toFixed(2)}
+                            {formatPrice(item.price)}
                           </div>
                         </div>
                       </div>
                     </div>
                     
                     <div className="hidden items-center text-base md:flex">
-                      ${item.price.toFixed(2)}
+                      {formatPrice(item.price)}
                     </div>
                     
                     <div className="flex items-center">
@@ -150,10 +151,10 @@ export default function CartPage() {
                     
                     <div className="flex items-center justify-between md:justify-between">
                       <div className="text-base font-medium md:hidden">
-                        Total: ${(item.price * item.quantity).toFixed(2)}
+                        Total: {formatPrice(item.price * item.quantity)}
                       </div>
                       <div className="hidden text-base font-medium md:block">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {formatPrice(item.price * item.quantity)}
                       </div>
                       <Button
                         variant="ghost"
@@ -188,17 +189,17 @@ export default function CartPage() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span>{subtotal > 100 ? "Free" : "$10.00"}</span>
+                  <span>{subtotal > 5000 ? "Free" : formatPrice(500)}</span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax</span>
-                  <span>${(subtotal * 0.1).toFixed(2)}</span>
+                  <span>{formatPrice(subtotal * 0.18)}</span>
                 </div>
                 
                 <Separator />
@@ -206,11 +207,11 @@ export default function CartPage() {
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
                   <span>
-                    ${(
+                    {formatPrice(
                       subtotal + 
-                      (subtotal > 100 ? 0 : 10) + 
-                      subtotal * 0.1
-                    ).toFixed(2)}
+                      (subtotal > 5000 ? 0 : 500) + 
+                      subtotal * 0.18
+                    )}
                   </span>
                 </div>
               </div>

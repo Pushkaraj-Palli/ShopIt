@@ -8,6 +8,7 @@ import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
 import { toast } from '@/hooks/use-toast';
+import { formatPrice } from '@/app/lib/utils';
 import {
   Card,
   CardContent,
@@ -17,6 +18,7 @@ import {
 
 interface Product {
   id: string;
+  _id?: string; // Optional MongoDB ID
   name: string;
   price: number;
   category: string;
@@ -32,7 +34,23 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const { addToCart } = useCart();
+
+  // Handle both _id from MongoDB and id from props
+  const productId = product.id || product._id;
+
+  // Get a fallback image based on the product category
+  const getFallbackImage = () => {
+    const category = product.category.toLowerCase();
+    if (category.includes('electronics')) return 'https://images.unsplash.com/photo-1588508065123-287b28e013da?w=800&auto=format&fit=crop';
+    if (category.includes('clothing')) return 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&auto=format&fit=crop';
+    if (category.includes('home') || category.includes('kitchen')) return 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&auto=format&fit=crop';
+    if (category.includes('books')) return 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=800&auto=format&fit=crop';
+    if (category.includes('accessories')) return 'https://images.unsplash.com/photo-1611010344444-5f9e4d86a6e1?w=800&auto=format&fit=crop';
+    // Default fallback
+    return 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&auto=format&fit=crop';
+  };
 
   const handleAddToCart = () => {
     addToCart(product);
@@ -54,22 +72,27 @@ export function ProductCard({ product }: ProductCardProps) {
     });
   };
 
+  // Determine which image to display
+  const imageToShow = imageError ? getFallbackImage() : product.image;
+
   return (
     <Card
       className="overflow-hidden transition-all duration-300 h-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/product/${product.id}`}>
+      <Link href={`/product/${productId}`}>
         <CardHeader className="p-0 relative">
           <div className="aspect-[4/5] overflow-hidden relative">
             <Image
-              src={product.image}
+              src={imageToShow}
               alt={product.name}
               fill
               className={`object-cover transition-all duration-500 ${
                 isHovered ? "scale-110" : "scale-100"
               }`}
+              onError={() => setImageError(true)}
+              unoptimized={imageToShow.startsWith('https://')}
             />
             <Button
               variant="ghost"
@@ -107,15 +130,15 @@ export function ProductCard({ product }: ProductCardProps) {
             <span className="ml-1 text-xs font-medium">{product.rating}</span>
           </div>
         </div>
-        <Link href={`/product/${product.id}`}>
+        <Link href={`/product/${productId}`}>
           <h3 className="font-medium leading-tight line-clamp-2 hover:underline">
             {product.name}
           </h3>
         </Link>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between items-center">
-        <div className="font-semibold">${product.price.toFixed(2)}</div>
-        <Link href={`/product/${product.id}`} className="text-sm text-primary hover:underline">
+        <div className="font-semibold">{formatPrice(product.price)}</div>
+        <Link href={`/product/${productId}`} className="text-sm text-primary hover:underline">
           View Details
         </Link>
       </CardFooter>

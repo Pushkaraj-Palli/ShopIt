@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 
 interface Product {
   id: string;
@@ -87,10 +87,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
   
-  const subtotal = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity, 
-    0
-  );
+  // Calculate the cart subtotal
+  const subtotal = useMemo(() => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  }, [cartItems]);
   
   return (
     <CartContext.Provider value={{

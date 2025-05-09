@@ -118,15 +118,15 @@ export default function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname === item.href ? 'text-primary' : 'text-muted-foreground'
-                  }`}
-                >
-                  {item.name}
-                </Link>
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  pathname === item.href ? 'text-primary' : 'text-muted-foreground'
+                }`}
+              >
+                {item.name}
+              </Link>
               )
             ))}
           </nav>
@@ -207,16 +207,16 @@ export default function Header() {
                     </div>
                   </div>
                 ) : (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`text-sm font-medium transition-colors hover:text-primary ${
-                      pathname === item.href ? 'text-primary' : 'text-muted-foreground'
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                    pathname === item.href ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
                 )
               )}
             </nav>

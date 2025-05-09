@@ -5,9 +5,10 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { formatPrice } from '@/app/lib/utils';
 
 export function ProductFilters() {
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 50000]);
   const [expandedSections, setExpandedSections] = useState({
     categories: true,
     priceRange: true,
@@ -81,15 +82,15 @@ export function ProductFilters() {
         {expandedSections.priceRange && (
           <div className="mt-4 px-1">
             <Slider
-              defaultValue={[0, 500]}
-              max={1000}
-              step={10}
+              defaultValue={[0, 50000]}
+              max={100000}
+              step={1000}
               value={priceRange}
               onValueChange={(value: number[]) => setPriceRange(value)}
             />
             <div className="mt-2 flex items-center justify-between">
-              <span className="text-sm">${priceRange[0]}</span>
-              <span className="text-sm">${priceRange[1]}+</span>
+              <span className="text-sm">{formatPrice(priceRange[0])}</span>
+              <span className="text-sm">{formatPrice(priceRange[1])}+</span>
             </div>
           </div>
         )}
