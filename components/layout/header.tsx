@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useCart } from '@/context/cart-context';
 import { categories } from '@/app/lib/data';
+import { SearchDialog } from '@/components/layout/search-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,13 +33,14 @@ const navigation = [
     href: '/categories',
     hasDropdown: true 
   },
-  { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
+  // { name: 'About', href: '/about' },
+  // { name: 'Contact', href: '/contact' },
 ];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const pathname = usePathname();
   const { cartItems } = useCart();
   
@@ -133,7 +135,11 @@ export default function Header() {
         </div>
         
         <div className="flex items-center space-x-1 md:space-x-3">
-          <Button variant="ghost" size="icon">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSearchOpen(true)}
+          >
             <Search className="h-5 w-5" />
           </Button>
           
@@ -223,6 +229,12 @@ export default function Header() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Search Dialog */}
+      <SearchDialog 
+        isOpen={isSearchOpen} 
+        onOpenChange={setIsSearchOpen} 
+      />
     </header>
   );
 }

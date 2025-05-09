@@ -27,6 +27,20 @@ if (!global.mongoose) {
   global.mongoose = cached;
 }
 
+// Helper function to safely log MongoDB URI (hides username/password)
+function getSafeMongoDbUri(uri: string): string {
+  try {
+    const url = new URL(uri);
+    // Replace username and password with asterisks
+    if (url.username) url.username = '********';
+    if (url.password) url.password = '********';
+    return url.toString();
+  } catch (error) {
+    // If URI cannot be parsed, return a generic message
+    return 'MongoDB URI (credentials hidden)';
+  }
+}
+
 async function connectToDatabase(): Promise<mongoose.Connection> {
   if (cached.conn) {
     console.log('Using existing MongoDB connection');
@@ -34,7 +48,8 @@ async function connectToDatabase(): Promise<mongoose.Connection> {
   }
 
   if (!cached.promise) {
-    console.log('Connecting to MongoDB:', process.env.MONGODB_URI);
+    // Log a safe version of the URI that hides credentials
+    console.log('Connecting to MongoDB:', getSafeMongoDbUri(process.env.MONGODB_URI!));
     
     const opts = {
       bufferCommands: false,

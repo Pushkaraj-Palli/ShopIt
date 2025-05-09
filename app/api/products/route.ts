@@ -1,29 +1,45 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/app/lib/mongodb';
-import mongoose from 'mongoose';
 import Product from '@/app/models/Product';
 
-export async function GET(request: Request) {
+// Do not use dynamic = 'force-dynamic' with static exports
+// export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
+  console.log('API: GET /api/products - Start');
+  
   try {
-    console.log('API: GET /api/products - Start');
-    
-    // Connect to the database
+    // Connect to MongoDB
     await connectToDatabase();
     console.log('API: Connected to MongoDB');
     
-    // Parse query parameters
+    // Get search query from URL using new URL() to avoid static generation issues
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const searchQuery = searchParams.get('search') || '';
     
-    // Simple query - just fetch limited number of products
-    const dbProducts = await Product.find().limit(limit);
+    console.log(`API: Searching for "${searchQuery}"`);
     
-    // Transform MongoDB documents to the expected format
-    const products = dbProducts.map(product => {
+    // Build the query
+    const query: any = {};
+    
+    // Add search filter if present
+    if (searchQuery) {
+      query.$or = [
+        { name: { $regex: searchQuery, $options: 'i' } },
+        { description: { $regex: searchQuery, $options: 'i' } },
+        { category: { $regex: searchQuery, $options: 'i' } }
+      ];
+    }
+    
+    // Fetch products from MongoDB with the search filter
+    const products = await Product.find(query).limit(50);
+    console.log(`API: Found ${products.length} products matching "${searchQuery}"`);
+    
+    // Transform MongoDB documents to the format expected by our components
+    const formattedProducts = products.map(product => {
       const productObj = product.toObject();
       return {
         id: productObj._id.toString(),
-        _id: productObj._id.toString(), // Keep _id for backward compatibility
         name: productObj.name,
         price: productObj.price,
         category: productObj.category,
@@ -35,17 +51,19 @@ export async function GET(request: Request) {
       };
     });
     
-    console.log(`API: Found ${products.length} products`);
-    
     return NextResponse.json({ 
-      success: true, 
-      count: products.length,
-      data: products
+      products: formattedProducts,
+      count: formattedProducts.length
     });
+    
   } catch (error) {
-    console.error('API Error fetching products:', error);
+    // Sanitize the error before logging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // Don't include stack traces or full error objects in the logs
+    console.error('API Error fetching products:', errorMessage);
+    
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch products', error: (error instanceof Error) ? error.message : String(error) },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }
