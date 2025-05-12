@@ -54,16 +54,19 @@ export function WishlistButton({
   
   return (
     <Button
-      variant={inWishlist ? 'default' : variant}
+      variant={inWishlist ? 'ghost' : variant}
       size={size}
-      className={cn(className)}
+      className={cn(
+        className,
+        inWishlist && "text-red-500 hover:text-red-600"
+      )}
       onClick={handleToggleWishlist}
       disabled={isLoading || localLoading}
       title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
     >
       <Heart className={cn(
         "h-4 w-4",
-        inWishlist ? "fill-current" : "fill-none",
+        inWishlist ? "fill-red-500 text-red-500" : "fill-none",
         showText && "mr-2"
       )} />
       {showText && (inWishlist ? "Remove from Wishlist" : "Add to Wishlist")}

@@ -53,7 +53,11 @@ export function ProductCard({ product }: ProductCardProps) {
     return 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&auto=format&fit=crop';
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    // Prevent navigation to product page
+    e.stopPropagation();
+    e.preventDefault();
+    
     addToCart(product);
     toast({
       title: "Added to cart",
@@ -71,8 +75,25 @@ export function ProductCard({ product }: ProductCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/product/${productId}`}>
-        <CardHeader className="p-0 relative">
+      <CardHeader className="p-0 relative">
+        {/* Wishlist button outside of Link to prevent navigation */}
+        <div 
+          className={`absolute top-2 right-2 z-10 transition-opacity duration-300 ${
+            isHovered ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <WishlistButton
+            product={{
+              id: productId || '',
+              name: product.name,
+              price: product.price,
+              image: product.image
+            }}
+            className="bg-background/80 backdrop-blur-sm hover:bg-background"
+          />
+        </div>
+        
+        <Link href={`/product/${productId}`} className="block">
           <div className="aspect-[4/5] overflow-hidden relative">
             <Image
               src={imageToShow}
@@ -84,38 +105,25 @@ export function ProductCard({ product }: ProductCardProps) {
               onError={() => setImageError(true)}
               unoptimized={imageToShow.startsWith('https://')}
             />
-            <div 
-              className={`absolute top-2 right-2 transition-opacity duration-300 ${
-                isHovered ? 'opacity-100' : 'opacity-0'
-              }`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <WishlistButton
-                product={{
-                  id: productId || '',
-                  name: product.name,
-                  price: product.price,
-                  image: product.image
-                }}
-                className="bg-background/80 backdrop-blur-sm hover:bg-background"
-              />
-            </div>
+            
             {isHovered && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
                 className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-sm p-2"
+                onClick={(e) => handleAddToCart(e)}
               >
-                <Button variant="secondary" size="sm" className="w-full" onClick={handleAddToCart}>
+                <Button variant="secondary" size="sm" className="w-full">
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   Add to Cart
                 </Button>
               </motion.div>
             )}
           </div>
-        </CardHeader>
-      </Link>
+        </Link>
+      </CardHeader>
+      
       <CardContent className="p-4">
         <div className="mb-1 flex items-center">
           <span className="text-xs text-muted-foreground">{product.category}</span>

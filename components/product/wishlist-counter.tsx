@@ -34,10 +34,17 @@ export function WishlistCounter({
     6: 'h-6 w-6',
   }[iconSize] || 'h-5 w-5'; // Default to h-5 w-5 if size not specified
   
+  const hasItems = wishlistItems.length > 0;
+  
   return (
     <div className={cn("relative", className)}>
-      <Heart className={sizeClasses} />
-      {wishlistItems.length > 0 && (
+      <Heart 
+        className={cn(
+          sizeClasses,
+          hasItems && "text-red-500 fill-red-500"
+        )} 
+      />
+      {hasItems && (
         <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
           {wishlistItems.length}
         </span>

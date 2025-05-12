@@ -21,6 +21,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { WishlistCounter } from '@/components/product/wishlist-counter';
+import { cn } from '@/lib/utils';
 
 // Main categories for dropdown - filter to show only featured categories
 const headerCategories = categories.filter(category => category.featured).map(category => ({
@@ -289,7 +290,12 @@ export default function Header() {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <div className="flex items-center">
-                        <Heart className="mr-1 h-4 w-4" />
+                        <Heart 
+                          className={cn(
+                            "mr-1 h-4 w-4",
+                            wishlistItems.length > 0 && "fill-red-500 text-red-500"
+                          )} 
+                        />
                         <span>My Wishlist</span>
                         {wishlistItems.length > 0 && (
                           <span className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
