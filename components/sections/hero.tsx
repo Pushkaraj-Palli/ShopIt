@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, UserPlus, LogIn } from 'lucide-react';
 
 export function Hero() {
   const container = {
@@ -38,6 +38,7 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden bg-background pt-8 pb-16 md:pb-20 lg:pt-16 lg:pb-24">
       <div className="container px-4 md:px-6">
+
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 xl:gap-16">
           <motion.div 
             className="flex flex-col justify-center space-y-4 md:space-y-6"
@@ -75,6 +76,7 @@ export function Hero() {
                 <Link href="/categories">Explore Categories</Link>
               </Button>
             </motion.div>
+            
           </motion.div>
           <motion.div 
             className="flex items-center justify-center"

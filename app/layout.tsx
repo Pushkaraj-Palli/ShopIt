@@ -6,6 +6,9 @@ import { ThemeProvider } from '@/components/theme-provider';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { CartProvider } from '@/context/cart-context';
+import { AuthProvider } from '@/hooks/use-auth';
+import { AuthCtaButton } from '@/components/ui/auth-cta-button';
+import { WelcomeMessage } from '@/components/sections/welcome-message';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -27,14 +30,18 @@ export default function RootLayout({
           defaultTheme="light"
           enableSystem
         >
-          <CartProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <Toaster />
-          </CartProvider>
+          <AuthProvider>
+            <CartProvider>
+              <div className="flex min-h-screen flex-col">
+                <WelcomeMessage />
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <AuthCtaButton />
+              </div>
+              <Toaster />
+            </CartProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

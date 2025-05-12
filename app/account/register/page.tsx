@@ -1,7 +1,8 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -28,7 +30,11 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { isAuthenticated, register: registerUser } = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,30 +46,29 @@ export default function RegisterPage() {
     },
   });
   
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
+  
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     
-    // This would connect to your API in a real implementation
     try {
-      console.log('Registration data:', data);
+      const success = await registerUser(data.name, data.email, data.password);
       
-      // Simulate API request
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created. Welcome to ShopIt E-commerce!",
-        duration: 3000,
-      });
-      
-      // In a real app, you would redirect to dashboard or homepage
-    } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: "There was an error creating your account. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
+      if (success) {
+        toast({
+          title: "Registration successful",
+          description: "Your account has been created. Welcome to ShopIt E-commerce!",
+          duration: 3000,
+        });
+        
+        // Redirect to home page
+        router.push('/');
+      }
     } finally {
       setIsLoading(false);
     }

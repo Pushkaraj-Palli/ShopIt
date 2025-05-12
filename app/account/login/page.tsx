@@ -1,7 +1,8 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -21,7 +23,11 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { isAuthenticated, login } = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -31,30 +37,29 @@ export default function LoginPage() {
     },
   });
   
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
+  
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     
-    // This would connect to your API in a real implementation
     try {
-      console.log('Login data:', data);
+      const success = await login(data.email, data.password);
       
-      // Simulate API request
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back to ShopIt E-commerce!",
-        duration: 3000,
-      });
-      
-      // In a real app, you would redirect to dashboard or homepage
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
+      if (success) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back to ShopIt E-commerce!",
+          duration: 3000,
+        });
+        
+        // Redirect to home page
+        router.push('/');
+      }
     } finally {
       setIsLoading(false);
     }

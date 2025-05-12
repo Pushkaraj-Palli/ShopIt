@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, Menu, X, User, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Menu, X, User, ChevronDown, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useCart } from '@/context/cart-context';
+import { useAuth } from '@/hooks/use-auth';
 import { categories } from '@/app/lib/data';
-import { SearchDialog } from '@/components/layout/search-dialog';
+import { QuickAuth } from '@/components/layout/quick-auth';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,16 +34,15 @@ const navigation = [
     href: '/categories',
     hasDropdown: true 
   },
-  // { name: 'About', href: '/about' },
-  // { name: 'Contact', href: '/contact' },
+  
 ];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const pathname = usePathname();
   const { cartItems } = useCart();
+  const { user, logout, isAuthenticated } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -135,32 +135,44 @@ export default function Header() {
         </div>
         
         <div className="flex items-center space-x-1 md:space-x-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSearchOpen(true)}
-          >
-            <Search className="h-5 w-5" />
-          </Button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span>{user?.name}</span>
+                    <span className="text-xs font-normal text-muted-foreground">{user?.email}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/account">My Account</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/account/orders">My Orders</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-red-500 focus:text-red-500" 
+                  onClick={logout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <QuickAuth>
               <Button variant="ghost" size="icon">
                 <User className="h-5 w-5" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href="/account/login">Login</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/account/register">Register</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/account">My Account</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </QuickAuth>
+          )}
           
           <Link href="/cart">
             <Button variant="ghost" size="icon" className="relative">
@@ -225,16 +237,51 @@ export default function Header() {
                 </Link>
                 )
               )}
+              
+              {/* Mobile authentication links */}
+              {isAuthenticated ? (
+                <div className="pt-4 mt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-500 p-0"
+                      onClick={() => {
+                        logout();
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="mr-1 h-4 w-4" />
+                      <span>Logout</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-4 mt-4 border-t space-y-2">
+                  <Link
+                    href="/account/login"
+                    className="block text-sm font-medium transition-colors hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/account/register"
+                    className="block text-sm font-medium transition-colors hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Create Account
+                  </Link>
+                </div>
+              )}
             </nav>
           </motion.div>
         )}
       </AnimatePresence>
-      
-      {/* Search Dialog */}
-      <SearchDialog 
-        isOpen={isSearchOpen} 
-        onOpenChange={setIsSearchOpen} 
-      />
     </header>
   );
 }
