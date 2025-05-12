@@ -34,7 +34,7 @@ const testimonials = [
 export function Testimonials() {
   return (
     <section className="bg-secondary/50">
-      <div className="container px-4 md:px-6 py-12 md:py-20">
+      <div className="container px-4 md:px-6 py-12 md:py-16">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

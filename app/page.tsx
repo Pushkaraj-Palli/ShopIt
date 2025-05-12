@@ -1,4 +1,3 @@
-import { FeaturedProducts } from '@/components/sections/featured-products';
 import { Hero } from '@/components/sections/hero';
 import { Categories } from '@/components/sections/categories';
 import { Testimonials } from '@/components/sections/testimonials';
@@ -12,9 +11,8 @@ export default function Home() {
       <Hero />
       <AuthBenefits />
       <Categories />
-      <FeaturedProducts />
-      <PromoSection />
       <Testimonials />
+      <PromoSection />
       <Newsletter />
     </div>
   );

@@ -4,8 +4,11 @@ import { motion } from 'framer-motion';
 import { ShoppingBag, Heart, UserCheck, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 export function AuthBenefits() {
+  const router = useRouter();
+  
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -44,6 +47,16 @@ export function AuthBenefits() {
       description: "Get access to member-only discounts and early sales"
     }
   ];
+  
+  const handleSignIn = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push('/account/login');
+  };
+  
+  const handleRegister = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push('/account/register');
+  };
 
   return (
     <section className="py-12 bg-muted/50">
@@ -90,11 +103,11 @@ export function AuthBenefits() {
           viewport={{ once: true }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          <Button size="lg" asChild>
-            <Link href="/account/register">Create an Account</Link>
+          <Button size="lg" onClick={handleRegister}>
+            Create an Account
           </Button>
-          <Button size="lg" variant="outline" asChild>
-            <Link href="/account/login">Sign In</Link>
+          <Button size="lg" variant="outline" onClick={handleSignIn}>
+            Sign In
           </Button>
         </motion.div>
       </div>
