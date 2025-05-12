@@ -14,6 +14,25 @@
 - **Responsive Design**: Optimized for all devices.
 - **Animations**: Smooth transitions using Framer Motion.
 
+
+---
+## 🔗 Live Demo
+
+👉 [View Deployed App](https://shop-it-flax.vercel.app/)
+
+
+---
+
+## 🖼️ Project Screenshots
+
+<img src="https://github.com/user-attachments/assets/e8f442a3-df3d-4a10-87fd-2f825bcf45f4" alt="Home Page" width="100%"/>
+<br/>
+<img src="https://github.com/user-attachments/assets/7dd58dcb-014b-49da-b0e2-30e34164ca1b" alt="Product Page" width="100%"/>
+<br/>
+<img src="https://github.com/user-attachments/assets/94f3ed89-c0f9-4b45-98d7-e8172643d43e" alt="Product Detail" width="100%"/>
+<br/>
+<img src="https://github.com/user-attachments/assets/189d4679-fd87-4d31-bec0-1c72710e2ee4" alt="Cart and Checkout" width="100%"/>
+
 ---
 
 ## 🛠️ Tech Stack
@@ -21,6 +40,7 @@
 ### ✅ Frontend
 
 - [Next.js](https://nextjs.org/) – React framework for server-side rendering.
+- [React](https://reactjs.org/) – JavaScript library for building user interfaces.
 - [Tailwind CSS](https://tailwindcss.com/) – Utility-first CSS framework.
 - [Radix UI](https://www.radix-ui.com/) – Primitives for building accessible UI components.
 - [Framer Motion](https://www.framer.com/motion/) – Animation library for React.
@@ -34,6 +54,7 @@
 - [Mongoose](https://mongoosejs.com/) – ODM for MongoDB.
 - [JWT](https://jwt.io/) – JSON Web Tokens for authentication.
 - [Stripe](https://stripe.com/) – Payment processing platform.
+- [dotenv](https://www.npmjs.com/package/dotenv) – Environment variable management.
 
 ### ✅ Dev Tools
 
