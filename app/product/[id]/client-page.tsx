@@ -5,11 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Minus, Plus, ShoppingCart, Star, Truck } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, ShoppingCart, Star, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCart } from '@/context/cart-context';
-import { toast } from '@/hooks/use-toast';
+import { WishlistButton } from '@/components/product/wishlist-button';
+import { useToast } from '@/hooks/use-toast';
 import { formatPrice } from '@/app/lib/utils';
 
 // Define product interface
@@ -37,11 +38,11 @@ interface ProductClientProps {
 
 export default function ClientPage({ initialProduct, initialError }: ProductClientProps) {
   const router = useRouter();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   
-  const { addToCart } = useCart();
-
   const handleQuantityDecrease = () => {
     if (quantity > 1) {
       setQuantity(quantity - 1);
@@ -132,16 +133,17 @@ export default function ClientPage({ initialProduct, initialError }: ProductClie
             className="object-cover" 
             priority
           />
-          <button 
-            className="absolute top-4 right-4 rounded-full bg-background/80 p-2 backdrop-blur-sm hover:bg-background"
-            onClick={() => toast({
-              title: "Added to wishlist",
-              description: `${initialProduct.name} has been added to your wishlist`,
-              duration: 3000,
-            })}
-          >
-            <Heart className="h-5 w-5" />
-          </button>
+          <div className="absolute top-4 right-4">
+            <WishlistButton
+              product={{
+                id: initialProduct.id || initialProduct._id,
+                name: initialProduct.name,
+                price: initialProduct.price, 
+                image: initialProduct.image
+              }}
+              className="bg-background/80 backdrop-blur-sm hover:bg-background"
+            />
+          </div>
         </motion.div>
         
         <motion.div

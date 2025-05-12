@@ -4,14 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/cart-context';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Trash2, Minus, Plus, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice } from '@/app/lib/utils';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, clearCart, subtotal } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, clearCart, subtotal, isLoading } = useCart();
+  const { isAuthenticated, user } = useAuth();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   
   const handleCheckout = () => {
@@ -38,6 +40,23 @@ export default function CartPage() {
     exit: { opacity: 0, y: -20 },
   };
   
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="container px-4 md:px-6 py-10">
+        <div className="mx-auto max-w-3xl py-10 text-center">
+          <div className="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-muted">
+            <Loader2 className="h-12 w-12 text-muted-foreground animate-spin" />
+          </div>
+          <h1 className="mb-4 text-3xl font-bold">Loading Your Cart</h1>
+          <p className="mb-8 text-muted-foreground">
+            Please wait while we retrieve your cart items...
+          </p>
+        </div>
+      </div>
+    );
+  }
+  
   if (cartItems.length === 0) {
     return (
       <div className="container px-4 md:px-6 py-10">
@@ -47,7 +66,9 @@ export default function CartPage() {
           </div>
           <h1 className="mb-4 text-3xl font-bold">Your Cart is Empty</h1>
           <p className="mb-8 text-muted-foreground">
-            Looks like you haven't added any products to your cart yet.
+            {isAuthenticated && user
+              ? `Hi ${user.name}, you haven't added any products to your cart yet.`
+              : "Looks like you haven't added any products to your cart yet."}
           </p>
           <Button size="lg" asChild>
             <Link href="/shop">Continue Shopping</Link>
@@ -60,6 +81,12 @@ export default function CartPage() {
   return (
     <div className="container px-4 md:px-6 py-10">
       <h1 className="mb-6 text-3xl font-bold">Shopping Cart</h1>
+      
+      {isAuthenticated && user && (
+        <p className="mb-4 text-muted-foreground">
+          Hi {user.name}, here are the items in your cart:
+        </p>
+      )}
       
       <div className="grid gap-10 lg:grid-cols-12">
         <div className="lg:col-span-8">
@@ -82,35 +109,23 @@ export default function CartPage() {
                   <motion.div
                     key={item.id}
                     variants={item}
-                    initial="hidden"
-                    animate="show"
                     exit="exit"
-                    className="grid grid-cols-1 gap-4 border-t py-4 md:grid-cols-6 md:px-4"
+                    className="grid grid-cols-2 gap-4 border-t py-4 md:grid-cols-6 md:px-4"
                   >
-                    <div className="md:col-span-3">
-                      <div className="flex items-center gap-4">
-                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md">
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div>
-                          <Link 
-                            href={`/product/${item.id}`}
-                            className="font-medium hover:underline"
-                          >
-                            {item.name}
-                          </Link>
-                          <div className="mt-1 text-sm text-muted-foreground">
-                            {item.category}
-                          </div>
-                          <div className="mt-2 text-sm font-medium md:hidden">
-                            {formatPrice(item.price)}
-                          </div>
-                        </div>
+                    <div className="col-span-2 flex items-center gap-4 md:col-span-3">
+                      <div className="relative aspect-square h-16 w-16 min-w-[4rem] overflow-hidden rounded-md border bg-muted">
+                        <Image 
+                          src={item.image} 
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{item.name}</h3>
+                        <p className="text-sm text-muted-foreground md:hidden">
+                          {formatPrice(item.price)}
+                        </p>
                       </div>
                     </div>
                     
@@ -182,63 +197,53 @@ export default function CartPage() {
         </div>
         
         <div className="lg:col-span-4">
-          <div className="rounded-lg border bg-card">
-            <div className="p-6">
-              <h2 className="mb-4 text-xl font-semibold">Order Summary</h2>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatPrice(subtotal)}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span>{subtotal > 5000 ? "Free" : formatPrice(500)}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax</span>
-                  <span>{formatPrice(subtotal * 0.18)}</span>
-                </div>
-                
-                <Separator />
-                
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span>
-                    {formatPrice(
-                      subtotal + 
-                      (subtotal > 5000 ? 0 : 500) + 
-                      subtotal * 0.18
-                    )}
-                  </span>
-                </div>
+          <div className="rounded-lg border bg-card p-6">
+            <h2 className="mb-4 text-lg font-medium">Order Summary</h2>
+            <div className="space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
-              
-              <Button 
-                className="mt-6 w-full"
-                size="lg"
-                onClick={handleCheckout}
-                disabled={isCheckingOut}
-              >
-                {isCheckingOut ? (
-                  "Processing..."
-                ) : (
-                  <>
-                    Proceed to Checkout
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-              
-              <div className="mt-6 text-center text-sm text-muted-foreground">
-                We accept credit cards, PayPal, and bank transfers
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Shipping</span>
+                <span>Calculated at checkout</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Tax</span>
+                <span>Calculated at checkout</span>
+              </div>
+              <Separator className="my-4" />
+              <div className="flex justify-between font-medium">
+                <span>Total</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
             </div>
+            <Button 
+              className="mt-6 w-full" 
+              size="lg"
+              onClick={handleCheckout}
+              disabled={isCheckingOut}
+            >
+              {isCheckingOut ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Checkout <ArrowRight className="ml-2 h-4 w-4" /> 
+                </>
+              )}
+            </Button>
+            
+            {!isAuthenticated && (
+              <div className="mt-4 rounded border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800">
+                <p>Sign in to save your cart and access it from any device.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
-}
+} 

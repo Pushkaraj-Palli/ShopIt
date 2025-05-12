@@ -7,6 +7,7 @@ import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { CartProvider } from '@/context/cart-context';
 import { AuthProvider } from '@/hooks/use-auth';
+import { WishlistProvider } from '@/context/wishlist-context';
 import { AuthCtaButton } from '@/components/ui/auth-cta-button';
 import { WelcomeMessage } from '@/components/sections/welcome-message';
 
@@ -32,14 +33,16 @@ export default function RootLayout({
         >
           <AuthProvider>
             <CartProvider>
-              <div className="flex min-h-screen flex-col">
-                <WelcomeMessage />
-                <Header />
-                <main className="flex-1">{children}</main>
-                <Footer />
-                <AuthCtaButton />
-              </div>
-              <Toaster />
+              <WishlistProvider>
+                <div className="flex min-h-screen flex-col">
+                  <WelcomeMessage />
+                  <Header />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                  <AuthCtaButton />
+                </div>
+                <Toaster />
+              </WishlistProvider>
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>

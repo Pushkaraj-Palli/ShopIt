@@ -6,6 +6,7 @@ export interface IUser {
   name: string;
   email: string;
   password: string;
+  cart?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -36,6 +37,10 @@ const userSchema = new Schema<IUser>(
       required: [true, 'Please provide a password'],
       minlength: [6, 'Password must be at least 6 characters'],
       select: false // Don't return password in queries by default
+    },
+    cart: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Cart'
     }
   },
   {

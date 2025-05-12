@@ -4,11 +4,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/cart-context';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { formatPrice } from '@/app/lib/utils';
+import { WishlistButton } from '@/components/product/wishlist-button';
 import {
   Card,
   CardContent,
@@ -33,9 +34,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
   const { addToCart } = useCart();
+  const { toast } = useToast();
 
   // Handle both _id from MongoDB and id from props
   const productId = product.id || product._id;
@@ -57,17 +58,6 @@ export function ProductCard({ product }: ProductCardProps) {
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart`,
-      duration: 3000,
-    });
-  };
-
-  const toggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsFavorite(!isFavorite);
-    toast({
-      title: isFavorite ? "Removed from wishlist" : "Added to wishlist",
-      description: `${product.name} has been ${isFavorite ? "removed from" : "added to"} your wishlist`,
       duration: 3000,
     });
   };
@@ -94,18 +84,22 @@ export function ProductCard({ product }: ProductCardProps) {
               onError={() => setImageError(true)}
               unoptimized={imageToShow.startsWith('https://')}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`absolute top-2 right-2 bg-background/80 backdrop-blur-sm hover:bg-background transition-opacity duration-300 ${
-                isHovered || isFavorite ? 'opacity-100' : 'opacity-0'
+            <div 
+              className={`absolute top-2 right-2 transition-opacity duration-300 ${
+                isHovered ? 'opacity-100' : 'opacity-0'
               }`}
-              onClick={toggleFavorite}
+              onClick={(e) => e.stopPropagation()}
             >
-              <Heart
-                className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`}
+              <WishlistButton
+                product={{
+                  id: productId || '',
+                  name: product.name,
+                  price: product.price,
+                  image: product.image
+                }}
+                className="bg-background/80 backdrop-blur-sm hover:bg-background"
               />
-            </Button>
+            </div>
             {isHovered && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

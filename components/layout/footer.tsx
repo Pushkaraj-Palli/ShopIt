@@ -3,6 +3,14 @@ import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+const shopLinks = [
+  { name: 'All Products', href: '/shop' },
+  { name: 'Categories', href: '/categories' },
+  { name: 'Featured Items', href: '/shop?featured=true' },
+  { name: 'New Arrivals', href: '/shop?sort=newest' },
+  { name: 'My Wishlist', href: '/wishlist' },
+];
+
 export default function Footer() {
   return (
     <footer className="bg-background border-t">
@@ -34,31 +42,13 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="text-sm font-semibold">Shop</h4>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/shop" className="text-muted-foreground hover:text-foreground">
-                  All Products
-                </Link>
-              </li>
-              <li>
-                <Link href="/categories/clothing" className="text-muted-foreground hover:text-foreground">
-                  Clothing
-                </Link>
-              </li>
-              <li>
-                <Link href="/categories/electronics" className="text-muted-foreground hover:text-foreground">
-                  Electronics
-                </Link>
-              </li>
-              <li>
-                <Link href="/categories/accessories" className="text-muted-foreground hover:text-foreground">
-                  Accessories
-                </Link>
-              </li>
-              <li>
-                <Link href="/categories/home" className="text-muted-foreground hover:text-foreground">
-                  Home & Living
-                </Link>
-              </li>
+              {shopLinks.map((link) => (
+                <li key={link.name}>
+                  <Link href={link.href} className="text-muted-foreground hover:text-foreground">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
           

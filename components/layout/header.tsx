@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Menu, X, User, ChevronDown, LogOut } from 'lucide-react';
+import { ShoppingCart, Menu, X, User, ChevronDown, LogOut, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useCart } from '@/context/cart-context';
+import { useWishlist } from '@/context/wishlist-context';
 import { useAuth } from '@/hooks/use-auth';
 import { categories } from '@/app/lib/data';
 import { QuickAuth } from '@/components/layout/quick-auth';
@@ -19,6 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import { WishlistCounter } from '@/components/product/wishlist-counter';
 
 // Main categories for dropdown - filter to show only featured categories
 const headerCategories = categories.filter(category => category.featured).map(category => ({
@@ -42,6 +44,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const { cartItems } = useCart();
+  const { wishlistItems } = useWishlist();
   const { user, logout, isAuthenticated } = useAuth();
   
   useEffect(() => {
@@ -156,6 +159,9 @@ export default function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/account/orders">My Orders</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/wishlist">My Wishlist</Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="text-red-500 focus:text-red-500" 
@@ -172,6 +178,14 @@ export default function Header() {
                 <User className="h-5 w-5" />
               </Button>
             </QuickAuth>
+          )}
+          
+          {isAuthenticated && (
+            <Link href="/wishlist">
+              <Button variant="ghost" size="icon" className="relative">
+                <WishlistCounter showEmpty={true} iconSize={5} />
+              </Button>
+            </Link>
           )}
           
           <Link href="/cart">
@@ -258,6 +272,39 @@ export default function Header() {
                       <LogOut className="mr-1 h-4 w-4" />
                       <span>Logout</span>
                     </Button>
+                  </div>
+                  
+                  {/* Mobile user links */}
+                  <div className="mt-3 space-y-2">
+                    <Link
+                      href="/account"
+                      className="block text-sm font-medium transition-colors hover:text-primary"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Account
+                    </Link>
+                    <Link
+                      href="/wishlist"
+                      className="block text-sm font-medium transition-colors hover:text-primary"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="flex items-center">
+                        <Heart className="mr-1 h-4 w-4" />
+                        <span>My Wishlist</span>
+                        {wishlistItems.length > 0 && (
+                          <span className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                            {wishlistItems.length}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                    <Link
+                      href="/account/orders"
+                      className="block text-sm font-medium transition-colors hover:text-primary"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Orders
+                    </Link>
                   </div>
                 </div>
               ) : (

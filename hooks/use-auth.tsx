@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { formatCartItemsForAPI } from '@/app/lib/cart-utils';
 
 // Define types
 interface User {
@@ -50,6 +51,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  // Helper to merge guest cart with user cart
+  const mergeGuestCartWithUserCart = async (token: string) => {
+    try {
+      // Get guest cart from localStorage
+      const guestCartString = localStorage.getItem('cart');
+      
+      if (!guestCartString) return; // No guest cart to merge
+      
+      const guestCart = JSON.parse(guestCartString);
+      
+      if (!guestCart || !Array.isArray(guestCart) || guestCart.length === 0) return; // Empty guest cart
+      
+      // Format cart items for API
+      const apiItems = formatCartItemsForAPI(guestCart);
+      
+      // Send to server to merge with user's cart
+      await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ items: apiItems })
+      });
+      
+      // Clear local cart after successful merge
+      localStorage.removeItem('cart');
+    } catch (error) {
+      console.error('Failed to merge guest cart with user cart:', error);
+    }
+  };
+
   // Login function
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
@@ -75,6 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       setToken(data.token);
       setUser(data.user);
+      
+      // Merge guest cart with user cart
+      await mergeGuestCartWithUserCart(data.token);
       
       return true;
     } catch (error: any) {
@@ -114,6 +150,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       setToken(data.token);
       setUser(data.user);
+      
+      // Merge guest cart with user cart
+      await mergeGuestCartWithUserCart(data.token);
       
       return true;
     } catch (error: any) {
@@ -156,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Hook for using the auth context
+// Custom hook to use auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   
