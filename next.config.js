@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Only use static export in production
-  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
+  // Remove static export to allow dynamic routes and API routes
+  // output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
   eslint: {
     ignoreDuringBuilds: true,
   },
