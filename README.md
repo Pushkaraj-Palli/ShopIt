@@ -87,6 +87,20 @@ node scripts/seed.js
 
 ---
 
+## 🏪 Seller onboarding and admin setup
+
+Public registration creates customer accounts only. Customers can apply from **Become a seller** in the account menu. Applications are reviewed by an admin at `/admin/retailers`; approval changes the account role to `retailer`, while rejection includes a reason and allows resubmission.
+
+To create the first admin account:
+
+1. Copy `.env.example` to `.env.local` and configure `MONGODB_URI`, `JWT_SECRET`, `ADMIN_NAME`, `ADMIN_EMAIL`, and a unique `ADMIN_PASSWORD` of at least 12 characters.
+2. Run `npm run seed:admin`. A new admin is created, or the configured existing account is granted admin access without changing its password.
+3. Start the app with `npm run dev`, then sign in at `/account/login` and open **Seller applications** from the account menu.
+
+The seed command only creates or updates the configured admin account; it does not reset the database.
+
+---
+
 ## ⚙️ Scripts
 
 - `npm run dev` – Start the Next.js development server.

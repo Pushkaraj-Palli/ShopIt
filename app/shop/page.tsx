@@ -2,6 +2,7 @@ import { ProductFilters } from '@/components/product/product-filters';
 import ClientPage from './client-page';
 import connectToDatabase from '@/app/lib/mongodb';
 import Product from '@/app/models/Product';
+import { publicProductQuery } from '@/app/lib/product-queries';
 
 export const metadata = {
   title: 'Shop - ShopIt E-commerce',
@@ -51,7 +52,7 @@ export default async function ShopPage({
   }
   
   // Fetch products from MongoDB with the filter
-  const dbProducts = await Product.find(query).limit(50);
+  const dbProducts = await Product.find(publicProductQuery(query)).limit(50);
   
   // Transform MongoDB documents to the format expected by our components
   const products = dbProducts.map(product => {

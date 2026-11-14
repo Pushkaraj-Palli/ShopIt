@@ -22,7 +22,17 @@ export async function seedDatabase() {
     
     // Insert products
     console.log('Seeding products...');
-    await Product.insertMany(products);
+    await Product.insertMany(products.map((product) => ({
+      ...product,
+      sellerId: null,
+      status: 'active',
+      basePrice: Math.round(product.price * 100),
+      currency: 'INR',
+      images: product.image ? [product.image] : [],
+      stockQty: null,
+      trackInventory: false,
+      allowBackorders: false,
+    })));
     
     console.log('Database seeded successfully!');
     return { success: true };
@@ -51,4 +61,4 @@ export async function isDatabaseSeeded() {
     console.error('Error checking database seed status:', error);
     return { isSeeded: false, error };
   }
-} 
+}

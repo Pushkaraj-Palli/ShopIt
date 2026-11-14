@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import connectToDatabase from '@/app/lib/mongodb';
 import Product from '@/app/models/Product';
+import { publicProductQuery } from '@/app/lib/product-queries';
 import ClientPage from './client-page';
 
 // Define metadata for the page
@@ -17,7 +18,7 @@ export async function generateStaticParams() {
     await connectToDatabase();
     
     // Get all product IDs to pre-render
-    const products = await Product.find({}, '_id').limit(50);
+    const products = await Product.find(publicProductQuery({}), '_id').limit(50);
     
     // Return an array of objects with id parameter
     return products.map((product) => ({
@@ -41,7 +42,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
     await connectToDatabase();
     
     // Find the product by ID
-    const foundProduct = await Product.findById(id);
+    const foundProduct = await Product.findOne(publicProductQuery({ _id: id }));
     
     if (foundProduct) {
       // Transform MongoDB document to the expected format

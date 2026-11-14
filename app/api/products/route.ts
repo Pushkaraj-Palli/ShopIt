@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/app/lib/mongodb';
 import Product from '@/app/models/Product';
+import { publicProductQuery } from '@/app/lib/product-queries';
 
 // Do not use dynamic = 'force-dynamic' with static exports
 // export const dynamic = 'force-dynamic';
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Fetch products from MongoDB with the search filter
-    const products = await Product.find(query).limit(50);
+    const products = await Product.find(publicProductQuery(query)).limit(50);
     console.log(`API: Found ${products.length} products matching "${searchQuery}"`);
     
     // Transform MongoDB documents to the format expected by our components
@@ -67,4 +68,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

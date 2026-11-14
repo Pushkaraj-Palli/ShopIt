@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/app/lib/mongodb';
 import Product from '@/app/models/Product';
+import { publicProductQuery } from '@/app/lib/product-queries';
 
 interface RouteParams {
   params: {
@@ -23,7 +24,7 @@ export async function GET(
     const { id } = params;
     
     // Find the product by ID
-    const product = await Product.findById(id);
+    const product = await Product.findOne(publicProductQuery({ _id: id }));
     
     if (!product) {
       return NextResponse.json(
@@ -58,4 +59,4 @@ export async function GET(
       { status: 500 }
     );
   }
-} 
+}

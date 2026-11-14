@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/app/lib/mongodb';
 import Category from '@/app/models/Category';
 import Product from '@/app/models/Product';
+import { publicProductQuery } from '@/app/lib/product-queries';
 
 interface RouteParams {
   params: {
@@ -28,7 +29,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
     
     // Find products for this category
-    const products = await Product.find({ categorySlug: slug });
+    const products = await Product.find(publicProductQuery({ categorySlug: slug }));
     
     return NextResponse.json({ 
       success: true, 
@@ -48,4 +49,4 @@ export async function GET(request: Request, { params }: RouteParams) {
       error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
-} 
+}
