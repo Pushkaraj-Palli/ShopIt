@@ -9,6 +9,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  role: 'customer' | 'retailer' | 'admin';
 }
 
 interface AuthContextType {
@@ -169,6 +170,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Logout function
   const logout = () => {
+    void fetch('/api/auth/logout', { method: 'POST' }).catch((error) => {
+      console.error('Failed to clear server session:', error);
+    });
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     localStorage.removeItem('user_logged_in');

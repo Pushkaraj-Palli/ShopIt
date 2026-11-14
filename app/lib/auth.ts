@@ -1,12 +1,28 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
+import connectToDatabase from '@/app/lib/mongodb';
+import User from '@/app/models/User';
+import { hasRole, type UserRole } from '@/lib/auth/permissions';
 
-// Environment variable validation
-if (!process.env.JWT_SECRET) {
-  console.error('JWT_SECRET environment variable is not defined');
+const JWT_SECRET = process.env.JWT_SECRET;
+
+export interface AuthenticatedUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-do-not-use-in-production';
+export type RoleGuardResult =
+  | { user: AuthenticatedUser; error: null }
+  | { user: null; error: 'unauthorized' | 'forbidden' };
+
+export function authorizationErrorResponse(error: 'unauthorized' | 'forbidden') {
+  return NextResponse.json(
+    { error: error === 'unauthorized' ? 'Unauthorized' : 'Forbidden' },
+    { status: error === 'unauthorized' ? 401 : 403 },
+  );
+}
 
 /**
  * Verify user authentication from request
@@ -15,27 +31,48 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-do-not-use-in-prod
  */
 export async function verifyAuth(request: NextRequest): Promise<string | null> {
   try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return null;
-    }
-    
-    // Extract token
-    const token = authHeader.split(' ')[1];
-    
-    if (!token) {
-      return null;
-    }
-    
-    // Verify token
+    if (!JWT_SECRET) return null;
+    const token = getRequestToken(request);
+    if (!token) return null;
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-    
     return decoded.id;
-  } catch (error) {
-    console.error('Auth verification error:', error);
+  } catch {
     return null;
+  }
+}
+
+function getRequestToken(request: NextRequest): string | null {
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) return authHeader.slice(7) || null;
+  return request.cookies.get('shopit_session')?.value ?? null;
+}
+
+/** Loads the current role from MongoDB so stale JWT claims cannot grant access. */
+export async function requireRole(
+  request: NextRequest,
+  allowedRoles: readonly UserRole[],
+): Promise<RoleGuardResult> {
+  const userId = await verifyAuth(request);
+  if (!userId) return { user: null, error: 'unauthorized' };
+
+  try {
+    await connectToDatabase();
+    const user = await User.findById(userId).select('name email role status');
+    if (!user || user.status !== 'active') return { user: null, error: 'unauthorized' };
+    if (!hasRole(user.role, allowedRoles)) return { user: null, error: 'forbidden' };
+
+    return {
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      error: null,
+    };
+  } catch (error) {
+    console.error('Role authorization lookup failed:', error instanceof Error ? error.message : 'Unknown error');
+    return { user: null, error: 'unauthorized' };
   }
 }
 

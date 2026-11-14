@@ -6,6 +6,9 @@ export interface IUser {
   name: string;
   email: string;
   password: string;
+  role: 'customer' | 'retailer' | 'admin';
+  status: 'active' | 'suspended';
+  emailVerified: boolean;
   cart?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -37,6 +40,26 @@ const userSchema = new Schema<IUser>(
       required: [true, 'Please provide a password'],
       minlength: [6, 'Password must be at least 6 characters'],
       select: false // Don't return password in queries by default
+    },
+    // Roles are assigned by trusted server-side workflows only. Public signup
+    // intentionally cannot choose a role.
+    role: {
+      type: String,
+      enum: ['customer', 'retailer', 'admin'],
+      default: 'customer',
+      required: true,
+      index: true
+    },
+    status: {
+      type: String,
+      enum: ['active', 'suspended'],
+      default: 'active',
+      required: true
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+      required: true
     },
     cart: {
       type: mongoose.Schema.Types.ObjectId,

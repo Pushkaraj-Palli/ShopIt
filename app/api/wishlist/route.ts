@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/app/lib/mongodb';
 import Wishlist from '@/app/models/Wishlist';
-import { verifyAuth } from '@/lib/auth';
+import { authorizationErrorResponse, requireRole } from '@/app/lib/auth';
 
 // GET /api/wishlist - Get the current user's wishlist
 export async function GET(request: NextRequest) {
   try {
     // Verify user authentication
-    const userId = await verifyAuth(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireRole(request, ['customer', 'retailer', 'admin']);
+    if (!auth.user) return authorizationErrorResponse(auth.error);
+    const userId = auth.user.id;
 
     await connectToDatabase();
     
@@ -36,10 +35,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify user authentication
-    const userId = await verifyAuth(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireRole(request, ['customer', 'retailer', 'admin']);
+    if (!auth.user) return authorizationErrorResponse(auth.error);
+    const userId = auth.user.id;
 
     await connectToDatabase();
     
@@ -105,10 +103,9 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Verify user authentication
-    const userId = await verifyAuth(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireRole(request, ['customer', 'retailer', 'admin']);
+    if (!auth.user) return authorizationErrorResponse(auth.error);
+    const userId = auth.user.id;
 
     // Get the product ID from the URL
     const url = new URL(request.url);
