@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/account/login' || pathname === '/account/register') return NextResponse.next();
   const isRetailerArea = pathname === '/seller' || pathname.startsWith('/seller/');
   const isAdminArea = pathname === '/admin' || pathname.startsWith('/admin/');
-  const isCustomerArea = pathname === '/checkout' || pathname.startsWith('/checkout/') || pathname === '/account' || pathname.startsWith('/account/');
+  const isCustomerArea = pathname === '/checkout' || pathname.startsWith('/checkout/') || pathname === '/account' || pathname.startsWith('/account/') || pathname === '/become-a-seller';
   if (!isRetailerArea && !isAdminArea && !isCustomerArea) return NextResponse.next();
 
   const token = request.cookies.get('shopit_session')?.value;
@@ -54,14 +54,15 @@ export async function middleware(request: NextRequest) {
   loginUrl.searchParams.set('next', pathname);
 
   if (!session) return NextResponse.redirect(loginUrl);
-  if (isAdminArea && session.role !== 'admin') return NextResponse.redirect(new URL('/?access=denied', request.url));
-  if (isRetailerArea && !['retailer', 'admin'].includes(session.role ?? '')) {
-    return NextResponse.redirect(new URL('/?access=denied', request.url));
+  if ((isAdminArea && session.role !== 'admin') || (isRetailerArea && !['retailer', 'admin'].includes(session.role ?? ''))) {
+    const refreshUrl = new URL('/api/auth/session', request.url);
+    refreshUrl.searchParams.set('next', pathname);
+    return NextResponse.redirect(refreshUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/seller/:path*', '/admin/:path*', '/account/:path*', '/checkout/:path*'],
+  matcher: ['/seller/:path*', '/admin/:path*', '/account/:path*', '/checkout/:path*', '/become-a-seller'],
 };

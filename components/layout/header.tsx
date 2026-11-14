@@ -163,6 +163,16 @@ export default function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/wishlist">My Wishlist</Link>
                 </DropdownMenuItem>
+                {user?.role === 'customer' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/become-a-seller">Become a seller</Link>
+                  </DropdownMenuItem>
+                )}
+                {user?.role === 'admin' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/retailers">Seller applications</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="text-red-500 focus:text-red-500" 

@@ -32,24 +32,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Check for existing token on mount
+  // Restore the cached session, then refresh its role from the database.
   useEffect(() => {
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
+    let active = true;
+
+    const restoreSession = async () => {
+      let storedToken: string | null = null;
       try {
-        setUser(JSON.parse(storedUser));
+        storedToken = localStorage.getItem('auth_token');
+        const storedUser = localStorage.getItem('user');
+        if (storedToken && storedUser) {
+          const parsedUser = JSON.parse(storedUser) as User;
+          if (parsedUser.id && parsedUser.email && parsedUser.name) {
+            setToken(storedToken);
+            setUser(parsedUser);
+          } else {
+            storedToken = null;
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+          }
+        }
       } catch (error) {
         console.error('Failed to parse stored user data:', error);
-        // Clear invalid data
+        storedToken = null;
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
       }
-    }
-    
-    setIsLoading(false);
+
+      try {
+        const response = await fetch('/api/auth/session', {
+          cache: 'no-store',
+          headers: storedToken ? { Authorization: `Bearer ${storedToken}` } : undefined,
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (active && data.token && data.user) {
+            localStorage.setItem('auth_token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('user_logged_in', 'true');
+            setToken(data.token);
+            setUser(data.user);
+          }
+        } else if (response.status === 401 && storedToken) {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('user_logged_in');
+          if (active) {
+            setToken(null);
+            setUser(null);
+          }
+        }
+      } catch (error) {
+        console.error('Could not refresh the session:', error);
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+
+    void restoreSession();
+    return () => { active = false; };
   }, []);
 
   // Helper to merge guest cart with user cart
