@@ -17,6 +17,7 @@ type ProductForReview = {
   tags: string[];
   image: string;
   stockQty: number | null;
+  variants: { id?: string; sku: string; options: Record<string, string>; price: number; stockQty: number }[];
   createdAt: string;
   seller: { id: string; name: string; email: string } | null;
 };
@@ -116,7 +117,15 @@ export default function AdminProductsPage() {
                 <div><dt className="font-medium">Brand</dt><dd className="text-muted-foreground">{product.brand || 'Not provided'}</dd></div>
                 <div><dt className="font-medium">SKU</dt><dd className="text-muted-foreground">{product.sku || 'Not provided'}</dd></div>
                 <div><dt className="font-medium">Tags</dt><dd className="text-muted-foreground">{product.tags.join(', ') || 'None'}</dd></div>
+                <div><dt className="font-medium">Variants</dt><dd className="text-muted-foreground">{product.variants.length ? `${product.variants.length} variant(s)` : 'No variants'}</dd></div>
               </dl>
+              {product.variants.length > 0 && (
+                <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+                  {product.variants.map((variant) => (
+                    <li key={variant.id ?? variant.sku}>{variant.sku} · {Object.entries(variant.options).map(([key, value]) => `${key}: ${value}`).join(', ')} · ₹{variant.price.toLocaleString('en-IN')} · stock {variant.stockQty}</li>
+                  ))}
+                </ul>
+              )}
               <div className="mt-6 flex flex-col gap-4 border-t pt-5 sm:flex-row sm:items-end sm:justify-between">
                 <div className="w-full space-y-2 sm:max-w-md">
                   <Label htmlFor={`product-rejection-${product.id}`}>Rejection reason</Label>

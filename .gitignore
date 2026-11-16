@@ -5,8 +5,10 @@
 /.pnp
 .pnp.js
 
-# testing
-/coverage
+# e2e reports and screenshots
+reports/
+screenshots/
+mochawesome-report/
 
 # next.js
 /.next/
@@ -26,6 +28,8 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env.example 
+
 
 # vercel
 .vercel
@@ -33,3 +37,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+SHOPIT_PROJECT_SPEC.md

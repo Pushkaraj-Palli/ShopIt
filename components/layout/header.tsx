@@ -142,51 +142,49 @@ export default function Header() {
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button variant="ghost" size="icon" className="relative" data-testid="user-menu-btn">
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
-                    <span>{user?.name}</span>
+                    <span data-testid="user-display-name">{user?.name}</span>
                     <span className="text-xs font-normal text-muted-foreground">{user?.email}</span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/account">My Account</Link>
+                  <Link href="/cart" data-testid="nav-orders">My Orders</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/account/orders">My Orders</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/wishlist">My Wishlist</Link>
+                  <Link href="/wishlist" data-testid="nav-wishlist">My Wishlist</Link>
                 </DropdownMenuItem>
                 {user?.role === 'customer' && (
                   <DropdownMenuItem asChild>
-                    <Link href="/become-a-seller">Become a seller</Link>
+                    <Link href="/become-a-seller" data-testid="nav-become-seller">Become a seller</Link>
                   </DropdownMenuItem>
                 )}
                 {user?.role === 'admin' && (
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/retailers">Seller applications</Link>
+                    <Link href="/admin/retailers" data-testid="nav-admin-retailers">Seller applications</Link>
                   </DropdownMenuItem>
                 )}
                 {user?.role === 'admin' && (
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/products">Product moderation</Link>
+                    <Link href="/admin/products" data-testid="nav-admin-products">Product moderation</Link>
                   </DropdownMenuItem>
                 )}
                 {(user?.role === 'retailer' || user?.role === 'admin') && (
                   <DropdownMenuItem asChild>
-                    <Link href="/seller">Seller dashboard</Link>
+                    <Link href="/seller" data-testid="nav-seller-dashboard">Seller dashboard</Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="text-red-500 focus:text-red-500" 
                   onClick={logout}
+                  data-testid="nav-logout"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>
@@ -195,21 +193,21 @@ export default function Header() {
             </DropdownMenu>
           ) : (
             <QuickAuth>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" data-testid="quick-auth-btn">
                 <User className="h-5 w-5" />
               </Button>
             </QuickAuth>
           )}
           
           {isAuthenticated && (
-            <Link href="/wishlist">
+            <Link href="/wishlist" data-testid="nav-wishlist-btn">
               <Button variant="ghost" size="icon" className="relative">
                 <WishlistCounter showEmpty={true} iconSize={5} />
               </Button>
             </Link>
           )}
           
-          <Link href="/cart">
+          <Link href="/cart" data-testid="nav-cart">
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
               {cartItems.length > 0 && (
@@ -298,13 +296,6 @@ export default function Header() {
                   {/* Mobile user links */}
                   <div className="mt-3 space-y-2">
                     <Link
-                      href="/account"
-                      className="block text-sm font-medium transition-colors hover:text-primary"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      My Account
-                    </Link>
-                    <Link
                       href="/wishlist"
                       className="block text-sm font-medium transition-colors hover:text-primary"
                       onClick={() => setIsMenuOpen(false)}
@@ -325,7 +316,7 @@ export default function Header() {
                       </div>
                     </Link>
                     <Link
-                      href="/account/orders"
+                      href="/cart"
                       className="block text-sm font-medium transition-colors hover:text-primary"
                       onClick={() => setIsMenuOpen(false)}
                     >

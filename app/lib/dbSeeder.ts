@@ -32,6 +32,8 @@ export async function seedDatabase() {
       stockQty: null,
       trackInventory: false,
       allowBackorders: false,
+      hasVariants: false,
+      variants: [],
     })));
     
     console.log('Database seeded successfully!');

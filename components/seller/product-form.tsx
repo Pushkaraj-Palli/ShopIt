@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 const formSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100),
   description: z.string().trim().min(10, 'Description must be at least 10 characters').max(2000),
-  price: z.string().trim().regex(/^\d{1,8}(\.\d{1,2})?$/, 'Use INR with up to two decimal places').refine((value) => Number(value) > 0, 'Price must be greater than zero'),
+  price: z.string().trim().regex(/^$|^\d{1,8}(\.\d{1,2})?$/, 'Use INR with up to two decimal places').refine((value) => value === '' || Number(value) > 0, 'Price must be greater than zero'),
   compareAtPrice: z.string().trim().regex(/^$|^\d{1,8}(\.\d{1,2})?$/, 'Use INR with up to two decimal places'),
   categorySlug: z.string().min(1, 'Select a category'),
   subCategory: z.string().trim().max(100),
@@ -27,8 +27,39 @@ const formSchema = z.object({
   stockQty: z.string().regex(/^\d{1,10}$/, 'Enter a whole stock quantity'),
   lowStockThreshold: z.string().regex(/^\d{1,10}$/, 'Enter a whole number'),
   allowBackorders: z.boolean(),
+  hasVariants: z.boolean(),
+  variants: z.array(z.object({
+    sku: z.string().trim().min(1, 'Enter a unique SKU').max(80),
+    optionText: z.string().trim().min(3, 'Enter options like Size=M, Color=Red').refine(
+      (value) => value.split(',').every((pair) => {
+        const [key, optionValue, ...extra] = pair.split('=');
+        return Boolean(key?.trim() && optionValue?.trim() && extra.length === 0);
+      }),
+      'Use key=value pairs separated by commas',
+    ),
+    price: z.string().trim().regex(/^\d{1,8}(\.\d{1,2})?$/, 'Enter a variant price in INR').refine((value) => Number(value) > 0, 'Variant price must be greater than zero'),
+    stockQty: z.string().regex(/^\d{1,10}$/, 'Enter a whole stock quantity'),
+    lowStockThreshold: z.string().regex(/^\d{1,10}$/, 'Enter a whole number'),
+    image: z.string().trim().max(1000).refine(
+      (value) => !value || (value.startsWith('/') && !value.startsWith('//')) || /^https:\/\//i.test(value),
+      'Use a secure image URL or local path',
+    ),
+  })).max(50),
 }).superRefine((values, context) => {
-  if (values.compareAtPrice && Number(values.compareAtPrice) <= Number(values.price)) {
+  if (!values.hasVariants && (!values.price || Number(values.price) <= 0)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['price'], message: 'Price must be greater than zero' });
+  }
+  if (values.hasVariants && values.variants.length === 0) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['variants'], message: 'Add at least one variant' });
+  }
+  const variantSkus = values.variants.map((variant) => variant.sku.toLowerCase());
+  if (new Set(variantSkus).size !== variantSkus.length) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['variants'], message: 'Each variant must have a unique SKU' });
+  }
+  const startingPrice = values.hasVariants && values.variants.length
+    ? Math.min(...values.variants.map((variant) => Number(variant.price)))
+    : Number(values.price);
+  if (values.compareAtPrice && Number(values.compareAtPrice) <= startingPrice) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['compareAtPrice'], message: 'Compare-at price must be higher than the selling price' });
   }
 });
@@ -39,7 +70,7 @@ type ProductCategory = { name: string; slug: string; subCategories: string[] };
 const emptyValues: FormValues = {
   name: '', description: '', price: '', compareAtPrice: '', categorySlug: '',
   subCategory: '', brand: '', sku: '', image: '', tags: '', stockQty: '0',
-  lowStockThreshold: '5', allowBackorders: false,
+  lowStockThreshold: '5', allowBackorders: false, hasVariants: false, variants: [],
 };
 
 export function SellerProductForm({ productId }: { productId?: string }) {
@@ -49,10 +80,12 @@ export function SellerProductForm({ productId }: { productId?: string }) {
   const [loading, setLoading] = useState(Boolean(productId));
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: emptyValues,
   });
+  const { fields, append, remove } = useFieldArray({ control, name: 'variants' });
+  const hasVariants = watch('hasVariants');
 
   useEffect(() => {
     let active = true;
@@ -85,6 +118,15 @@ export function SellerProductForm({ productId }: { productId?: string }) {
             stockQty: String(data.product.stockQty ?? 0),
             lowStockThreshold: String(data.product.lowStockThreshold ?? 5),
             allowBackorders: Boolean(data.product.allowBackorders),
+            hasVariants: Boolean(data.product.hasVariants),
+            variants: (data.product.variants ?? []).map((variant: { sku: string; options: Record<string, string>; price: number; stockQty: number; lowStockThreshold?: number; image?: string }) => ({
+              sku: variant.sku,
+              optionText: Object.entries(variant.options ?? {}).map(([key, value]) => `${key}=${value}`).join(', '),
+              price: String(variant.price / 100),
+              stockQty: String(variant.stockQty),
+              lowStockThreshold: String(variant.lowStockThreshold ?? 5),
+              image: variant.image ?? '',
+            })),
           });
         }
       } catch (error) {
@@ -101,11 +143,29 @@ export function SellerProductForm({ productId }: { productId?: string }) {
   const saveProduct = async (values: FormValues) => {
     setSaving(true);
     setErrorMessage('');
+    const variants = values.variants.map((variant) => ({
+      sku: variant.sku,
+      options: Object.fromEntries(variant.optionText.split(',').map((pair) => {
+        const [key, value] = pair.split('=');
+        return [key.trim(), value.trim()];
+      })),
+      price: variant.price,
+      stockQty: Number(variant.stockQty),
+      lowStockThreshold: Number(variant.lowStockThreshold),
+      ...(variant.image ? { image: variant.image } : {}),
+    }));
+    const startingPrice = values.hasVariants
+      ? Math.min(...values.variants.map((variant) => Number(variant.price)))
+      : Number(values.price);
     const payload = {
       ...values,
-      stockQty: Number(values.stockQty),
+      price: values.hasVariants ? String(startingPrice) : values.price,
+      stockQty: values.hasVariants
+        ? values.variants.reduce((total, variant) => total + Number(variant.stockQty), 0)
+        : Number(values.stockQty),
       lowStockThreshold: Number(values.lowStockThreshold),
       tags: values.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+      variants,
     };
     try {
       const response = await fetch(productId ? `/api/seller/products/${productId}` : '/api/seller/products', {
@@ -145,7 +205,7 @@ export function SellerProductForm({ productId }: { productId?: string }) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="productDescription">Description</Label>
-          <Textarea id="productDescription" {...register('description')} disabled={saving} />
+          <Textarea id="productDescription" data-testid="retailer-product-description" {...register('description')} disabled={saving} />
           {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
@@ -164,29 +224,35 @@ export function SellerProductForm({ productId }: { productId?: string }) {
           </div>
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="productPrice">Price (INR)</Label>
-            <Input id="productPrice" data-testid="retailer-product-price" type="number" min="0.01" step="0.01" {...register('price')} disabled={saving} />
-            {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
-          </div>
+          {!hasVariants ? (
+            <div className="space-y-2">
+              <Label htmlFor="productPrice">Price (INR)</Label>
+              <Input id="productPrice" data-testid="retailer-product-price" type="number" min="0.01" step="0.01" {...register('price')} disabled={saving} />
+              {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
+            </div>
+          ) : (
+            <p className="self-center text-sm text-muted-foreground">The lowest variant price will be shown as the product starting price.</p>
+          )}
           <div className="space-y-2">
             <Label htmlFor="productCompareAtPrice">Compare-at price (INR, optional)</Label>
             <Input id="productCompareAtPrice" type="number" min="0.01" step="0.01" {...register('compareAtPrice')} disabled={saving} />
             {errors.compareAtPrice && <p className="text-sm text-destructive">{errors.compareAtPrice.message}</p>}
           </div>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="productStock">Stock quantity</Label>
-            <Input id="productStock" data-testid="retailer-product-stock" type="number" min="0" step="1" {...register('stockQty')} disabled={saving} />
-            {errors.stockQty && <p className="text-sm text-destructive">{errors.stockQty.message}</p>}
+        {!hasVariants && (
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="productStock">Stock quantity</Label>
+              <Input id="productStock" data-testid="retailer-product-stock" type="number" min="0" step="1" {...register('stockQty')} disabled={saving} />
+              {errors.stockQty && <p className="text-sm text-destructive">{errors.stockQty.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lowStockThreshold">Low stock threshold</Label>
+              <Input id="lowStockThreshold" type="number" min="0" step="1" {...register('lowStockThreshold')} disabled={saving} />
+              {errors.lowStockThreshold && <p className="text-sm text-destructive">{errors.lowStockThreshold.message}</p>}
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="lowStockThreshold">Low stock threshold</Label>
-            <Input id="lowStockThreshold" type="number" min="0" step="1" {...register('lowStockThreshold')} disabled={saving} />
-            {errors.lowStockThreshold && <p className="text-sm text-destructive">{errors.lowStockThreshold.message}</p>}
-          </div>
-        </div>
+        )}
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="productBrand">Brand</Label>
@@ -214,6 +280,63 @@ export function SellerProductForm({ productId }: { productId?: string }) {
           <input type="checkbox" data-testid="retailer-allow-backorders" className="h-4 w-4" {...register('allowBackorders')} disabled={saving} />
           Allow backorders
         </label>
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input type="checkbox" data-testid="retailer-has-variants" className="h-4 w-4" {...register('hasVariants')} disabled={saving} />
+          This product has variants
+        </label>
+        {hasVariants && (
+          <section className="space-y-4 rounded-md border p-4" aria-label="Product variants" data-testid="retailer-variants">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="font-semibold">Variants</h2>
+                <p className="text-sm text-muted-foreground">Add a unique SKU, option pairs, price, and stock for each variant.</p>
+              </div>
+              <Button type="button" variant="outline" size="sm" data-testid="add-product-variant" onClick={() => append({ sku: '', optionText: '', price: '', stockQty: '0', lowStockThreshold: '5', image: '' })} disabled={saving || fields.length >= 50}>
+                Add variant
+              </Button>
+            </div>
+            {errors.variants?.message && <p className="text-sm text-destructive">{errors.variants.message}</p>}
+            {fields.map((field, index) => (
+              <div key={field.id} className="space-y-4 rounded-md bg-muted/40 p-4" data-testid="product-variant-row">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor={`variant-sku-${field.id}`}>Variant SKU</Label>
+                    <Input id={`variant-sku-${field.id}`} data-testid="variant-sku" {...register(`variants.${index}.sku`)} disabled={saving} />
+                    {errors.variants?.[index]?.sku && <p className="text-sm text-destructive">{errors.variants[index]?.sku?.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`variant-options-${field.id}`}>Options</Label>
+                    <Input id={`variant-options-${field.id}`} placeholder="Size=M, Color=Blue" {...register(`variants.${index}.optionText`)} disabled={saving} />
+                    {errors.variants?.[index]?.optionText && <p className="text-sm text-destructive">{errors.variants[index]?.optionText?.message}</p>}
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor={`variant-price-${field.id}`}>Price (INR)</Label>
+                    <Input id={`variant-price-${field.id}`} type="number" min="0.01" step="0.01" {...register(`variants.${index}.price`)} disabled={saving} />
+                    {errors.variants?.[index]?.price && <p className="text-sm text-destructive">{errors.variants[index]?.price?.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`variant-stock-${field.id}`}>Stock</Label>
+                    <Input id={`variant-stock-${field.id}`} type="number" min="0" step="1" {...register(`variants.${index}.stockQty`)} disabled={saving} />
+                    {errors.variants?.[index]?.stockQty && <p className="text-sm text-destructive">{errors.variants[index]?.stockQty?.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`variant-threshold-${field.id}`}>Low stock threshold</Label>
+                    <Input id={`variant-threshold-${field.id}`} type="number" min="0" step="1" {...register(`variants.${index}.lowStockThreshold`)} disabled={saving} />
+                    {errors.variants?.[index]?.lowStockThreshold && <p className="text-sm text-destructive">{errors.variants[index]?.lowStockThreshold?.message}</p>}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`variant-image-${field.id}`}>Variant image URL (optional)</Label>
+                  <Input id={`variant-image-${field.id}`} {...register(`variants.${index}.image`)} disabled={saving} />
+                  {errors.variants?.[index]?.image && <p className="text-sm text-destructive">{errors.variants[index]?.image?.message}</p>}
+                </div>
+                <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)} disabled={saving}>Remove variant</Button>
+              </div>
+            ))}
+          </section>
+        )}
         {errorMessage && <p role="alert" className="text-sm text-destructive">{errorMessage}</p>}
         <Button type="submit" data-testid="retailer-product-save" disabled={saving}>
           {saving ? 'Saving…' : productId ? 'Save changes for review' : 'Submit product for review'}

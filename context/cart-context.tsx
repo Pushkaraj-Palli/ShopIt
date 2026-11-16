@@ -7,6 +7,9 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Product {
   id: string;
+  variantId?: string;
+  variantSku?: string;
+  variantOptions?: Record<string, string>;
   name: string;
   price: number;
   image: string;
@@ -16,6 +19,10 @@ interface Product {
 
 interface CartItem extends Product {
   quantity: number;
+}
+
+function cartItemKey(item: Pick<CartItem, 'id' | 'variantId'>) {
+  return `${item.id}:${item.variantId ?? ''}`;
 }
 
 interface CartContextType {
@@ -57,6 +64,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             if (data.items && Array.isArray(data.items)) {
               const items: CartItem[] = data.items.map((item: CartItemType) => ({
                 id: item.productId,
+                ...(item.variantId ? { variantId: item.variantId } : {}),
+                ...(item.variantSku ? { variantSku: item.variantSku } : {}),
+                ...(item.variantOptions ? { variantOptions: item.variantOptions } : {}),
                 name: item.name,
                 price: item.price,
                 image: item.image,
@@ -118,10 +128,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         try {
           // Convert our format to API format
           const apiItems = cartItems.map(item => ({
-            productId: item.id,
-            name: item.name,
-            price: item.price,
-            image: item.image,
+            productId: item.productId || item.id,
+            ...(item.variantId ? { variantId: item.variantId } : {}),
             quantity: item.quantity
           }));
           
@@ -153,12 +161,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const quantityToAdd = product.quantity || 1;
     
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
+      const existingItem = prevItems.find(item => cartItemKey(item) === cartItemKey({ id: product.id, variantId: product.variantId }));
       
       if (existingItem) {
         // If item exists, replace its quantity with the new one or add to existing quantity
         return prevItems.map(item => 
-          item.id === product.id 
+          cartItemKey(item) === cartItemKey({ id: product.id, variantId: product.variantId })
             ? { ...item, quantity: quantityToAdd } 
             : item
         );
@@ -169,19 +177,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
   
-  const removeFromCart = (productId: string) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+  const removeFromCart = (itemKey: string) => {
+    setCartItems(prevItems => prevItems.filter(item => cartItemKey(item) !== itemKey && item.id !== itemKey));
   };
   
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (itemKey: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(itemKey);
       return;
     }
     
     setCartItems(prevItems => 
       prevItems.map(item => 
-        item.id === productId ? { ...item, quantity } : item
+        (cartItemKey(item) === itemKey || item.id === itemKey) ? { ...item, quantity } : item
       )
     );
   };

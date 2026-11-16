@@ -71,6 +71,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card
+      data-testid="product-card"
       className="overflow-hidden transition-all duration-300 h-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -114,7 +115,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-sm p-2"
                 onClick={(e) => handleAddToCart(e)}
               >
-                <Button variant="secondary" size="sm" className="w-full">
+                <Button variant="secondary" size="sm" className="w-full" data-testid="add-to-cart">
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   Add to Cart
                 </Button>
@@ -133,13 +134,13 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
         <Link href={`/product/${productId}`}>
-          <h3 className="font-medium leading-tight line-clamp-2 hover:underline">
+          <h3 data-testid="product-title" className="font-medium leading-tight line-clamp-2 hover:underline">
             {product.name}
           </h3>
         </Link>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between items-center">
-        <div className="font-semibold">{formatPrice(product.price)}</div>
+        <div data-testid="product-price" className="font-semibold">{formatPrice(product.price)}</div>
         <Link href={`/product/${productId}`} className="text-sm text-primary hover:underline">
           View Details
         </Link>

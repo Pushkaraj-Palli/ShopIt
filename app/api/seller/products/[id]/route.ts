@@ -28,6 +28,8 @@ function formatProduct(product: any) {
     lowStockThreshold: product.lowStockThreshold ?? 5,
     allowBackorders: product.allowBackorders ?? false,
     status: product.status,
+    hasVariants: product.hasVariants,
+    variants: product.variants ?? [],
   };
 }
 
@@ -67,12 +69,22 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const category = await Category.findOne({ slug: parsed.data.categorySlug }).select('name slug');
     if (!category) return NextResponse.json({ error: 'Select a valid category' }, { status: 400 });
 
+    const basePrice = parsed.data.hasVariants
+      ? Math.min(...parsed.data.variants.map((variant) => variant.price))
+      : parsed.data.price!;
+    const variantStock = parsed.data.hasVariants
+      ? parsed.data.variants.reduce((total, variant) => total + variant.stockQty, 0)
+      : parsed.data.stockQty;
+    if (!Number.isSafeInteger(variantStock)) {
+      return NextResponse.json({ error: 'Combined variant stock exceeds the supported range' }, { status: 400 });
+    }
+
     const status = auth.user.role === 'admin' ? undefined : 'pending_review';
     const update: Record<string, unknown> = {
       name: parsed.data.name,
       description: parsed.data.description,
-      price: parsed.data.price / 100,
-      basePrice: parsed.data.price,
+      price: basePrice / 100,
+      basePrice,
       compareAtPrice: parsed.data.compareAtPrice,
       category: category.name,
       categorySlug: category.slug,
@@ -82,10 +94,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       tags: parsed.data.tags,
       image: parsed.data.image,
       images: [parsed.data.image],
-      stockQty: parsed.data.stockQty,
+      stockQty: variantStock,
       trackInventory: true,
       lowStockThreshold: parsed.data.lowStockThreshold,
       allowBackorders: parsed.data.allowBackorders,
+      hasVariants: parsed.data.hasVariants,
+      variants: parsed.data.hasVariants ? parsed.data.variants : [],
     };
     if (status) update.status = status;
     const updateDocument: { $set: Record<string, unknown>; $unset?: Record<string, 1> } = { $set: update };

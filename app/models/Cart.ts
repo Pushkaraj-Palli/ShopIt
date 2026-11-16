@@ -3,6 +3,11 @@ import { IUser } from './User';
 
 export interface CartItem {
   productId: string;
+  variantId?: string;
+  variantSku?: string;
+  variantOptions?: Record<string, string>;
+  availableStock?: number | null;
+  isAvailable?: boolean;
   name: string;
   price: number;
   image: string;
@@ -29,6 +34,11 @@ const CartSchema = new Schema<ICart>(
           type: String,
           required: [true, 'Cart item must have a product ID']
         },
+        variantId: { type: String },
+        variantSku: { type: String },
+        variantOptions: { type: Schema.Types.Mixed },
+        availableStock: { type: Number, min: 0, default: null },
+        isAvailable: { type: Boolean, default: true },
         name: {
           type: String,
           required: [true, 'Cart item must have a name']

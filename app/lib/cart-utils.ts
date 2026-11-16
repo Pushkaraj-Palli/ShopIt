@@ -9,10 +9,8 @@
  */
 export function formatCartItemsForAPI(cartItems: any[]): any[] {
   return cartItems.map(item => ({
-    productId: item.id,
-    name: item.name,
-    price: item.price,
-    image: item.image,
+    productId: item.productId || item.id,
+    ...(item.variantId ? { variantId: item.variantId } : {}),
     quantity: item.quantity
   }));
 }
@@ -25,6 +23,10 @@ export function formatCartItemsForAPI(cartItems: any[]): any[] {
 export function formatCartItemsForClient(apiItems: any[]): any[] {
   return apiItems.map(item => ({
     id: item.productId,
+    productId: item.productId,
+    ...(item.variantId ? { variantId: item.variantId } : {}),
+    ...(item.variantSku ? { variantSku: item.variantSku } : {}),
+    ...(item.variantOptions ? { variantOptions: item.variantOptions } : {}),
     name: item.name,
     price: item.price,
     image: item.image,
@@ -47,15 +49,17 @@ export function mergeGuestCartWithUserCart(guestCart: any[], userCart: any[]): a
   // Create a map of user cart items by productId
   const userCartMap = new Map();
   
+  const cartKey = (item: any) => `${item.productId || item.id}:${item.variantId || ''}`;
   userCart.forEach(item => {
-    userCartMap.set(item.productId, item);
+    userCartMap.set(cartKey(item), item);
   });
   
   // Merge guest cart items, updating quantities for items that exist in both carts
   const mergedItems = [...userCart];
   
   guestCart.forEach(guestItem => {
-    const userItem = userCartMap.get(guestItem.id);
+    const guestKey = cartKey(guestItem);
+    const userItem = userCartMap.get(guestKey);
     
     if (userItem) {
       // Update quantity if item exists in both carts
@@ -63,7 +67,10 @@ export function mergeGuestCartWithUserCart(guestCart: any[], userCart: any[]): a
     } else {
       // Add new item from guest cart
       mergedItems.push({
-        productId: guestItem.id,
+        productId: guestItem.productId || guestItem.id,
+        ...(guestItem.variantId ? { variantId: guestItem.variantId } : {}),
+        ...(guestItem.variantSku ? { variantSku: guestItem.variantSku } : {}),
+        ...(guestItem.variantOptions ? { variantOptions: guestItem.variantOptions } : {}),
         name: guestItem.name,
         price: guestItem.price,
         image: guestItem.image,

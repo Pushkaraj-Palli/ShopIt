@@ -20,6 +20,8 @@ async function migrateProducts() {
     if (!Object.prototype.hasOwnProperty.call(product, 'trackInventory')) set.trackInventory = false;
     if (!Object.prototype.hasOwnProperty.call(product, 'stockQty')) set.stockQty = null;
     if (!Object.prototype.hasOwnProperty.call(product, 'allowBackorders')) set.allowBackorders = false;
+    if (!Object.prototype.hasOwnProperty.call(product, 'hasVariants')) set.hasVariants = false;
+    if (!Object.prototype.hasOwnProperty.call(product, 'variants')) set.variants = [];
     if (!Object.prototype.hasOwnProperty.call(product, 'currency')) set.currency = 'INR';
     if (!Object.prototype.hasOwnProperty.call(product, 'images')) set.images = product.image ? [product.image] : [];
 

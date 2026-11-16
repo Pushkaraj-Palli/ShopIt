@@ -26,11 +26,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-        >
+        <ThemeProvider>
+          <Toaster />
           <AuthProvider>
             <CartProvider>
               <WishlistProvider>
@@ -41,7 +38,6 @@ export default function RootLayout({
                   <Footer />
                   <AuthCtaButton />
                 </div>
-                <Toaster />
               </WishlistProvider>
             </CartProvider>
           </AuthProvider>

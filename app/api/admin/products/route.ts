@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizationErrorResponse, requireRole } from '@/app/lib/auth';
 import Product from '@/app/models/Product';
+import type { IProductVariant } from '@/app/models/Product';
 
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ['admin']);
@@ -28,6 +29,13 @@ export async function GET(request: NextRequest) {
           tags: product.tags ?? [],
           image: product.image,
           stockQty: product.stockQty,
+          variants: product.variants.map((variant: IProductVariant) => ({
+            id: variant._id?.toString(),
+            sku: variant.sku,
+            options: variant.options,
+            price: variant.price / 100,
+            stockQty: variant.stockQty,
+          })),
           createdAt: product.createdAt,
           seller: seller ? { id: seller._id.toString(), name: seller.name, email: seller.email } : null,
           rejectionReason: data.rejectionReason ?? '',

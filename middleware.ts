@@ -42,7 +42,7 @@ async function readSession(token: string): Promise<SessionPayload | null> {
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  if (pathname === '/account/login' || pathname === '/account/register') return NextResponse.next();
+  if (pathname === '/account/login' || pathname === '/account/register' || pathname === '/login' || pathname === '/register') return NextResponse.next();
   const isRetailerArea = pathname === '/seller' || pathname.startsWith('/seller/');
   const isAdminArea = pathname === '/admin' || pathname.startsWith('/admin/');
   const isCustomerArea = pathname === '/checkout' || pathname.startsWith('/checkout/') || pathname === '/account' || pathname.startsWith('/account/') || pathname === '/become-a-seller';

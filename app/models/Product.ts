@@ -2,6 +2,16 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export type ProductStatus = 'draft' | 'pending_review' | 'active' | 'archived' | 'rejected';
 
+export interface IProductVariant {
+  _id?: mongoose.Types.ObjectId;
+  sku: string;
+  options: Record<string, string>;
+  price: number;
+  stockQty: number;
+  lowStockThreshold: number;
+  image?: string;
+}
+
 export interface IProduct extends Document {
   sellerId: mongoose.Types.ObjectId | null;
   name: string;
@@ -18,6 +28,8 @@ export interface IProduct extends Document {
   trackInventory: boolean;
   lowStockThreshold?: number;
   allowBackorders: boolean;
+  hasVariants: boolean;
+  variants: IProductVariant[];
   attributes?: Record<string, unknown>;
   reviewedBy?: mongoose.Types.ObjectId;
   reviewedAt?: Date;
@@ -72,6 +84,18 @@ const ProductSchema = new Schema<IProduct>(
     trackInventory: { type: Boolean, default: false, required: true },
     lowStockThreshold: { type: Number, min: 0, validate: Number.isInteger },
     allowBackorders: { type: Boolean, default: false, required: true },
+    hasVariants: { type: Boolean, default: false, required: true },
+    variants: {
+      type: [new Schema<IProductVariant>({
+        sku: { type: String, required: true, trim: true, maxlength: 80 },
+        options: { type: Schema.Types.Mixed, required: true },
+        price: { type: Number, required: true, min: 1, validate: Number.isInteger },
+        stockQty: { type: Number, required: true, min: 0, validate: Number.isInteger },
+        lowStockThreshold: { type: Number, default: 5, min: 0, validate: Number.isInteger },
+        image: { type: String, trim: true, maxlength: 1000 },
+      }, { _id: true })],
+      default: [],
+    },
     attributes: { type: Schema.Types.Mixed },
     reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     reviewedAt: Date,

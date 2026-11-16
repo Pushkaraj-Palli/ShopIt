@@ -95,12 +95,13 @@ export default function RegisterPage() {
               <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
+                data-testid="register-name"
                 placeholder="John Doe"
                 {...register('name')}
                 disabled={isLoading}
               />
               {errors.name && (
-                <p className="text-sm text-red-500">{errors.name.message}</p>
+                <p data-testid="register-name-error" className="text-sm text-red-500">{errors.name.message}</p>
               )}
             </div>
             
@@ -108,12 +109,13 @@ export default function RegisterPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                data-testid="register-email"
                 placeholder="name@example.com"
                 {...register('email')}
                 disabled={isLoading}
               />
               {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
+                <p data-testid="register-email-error" className="text-sm text-red-500">{errors.email.message}</p>
               )}
             </div>
             
@@ -121,13 +123,14 @@ export default function RegisterPage() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                data-testid="register-password"
                 type="password"
                 placeholder="••••••••"
                 {...register('password')}
                 disabled={isLoading}
               />
               {errors.password && (
-                <p className="text-sm text-red-500">{errors.password.message}</p>
+                <p data-testid="register-password-error" className="text-sm text-red-500">{errors.password.message}</p>
               )}
             </div>
             
@@ -135,13 +138,14 @@ export default function RegisterPage() {
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
+                data-testid="register-confirm-password"
                 type="password"
                 placeholder="••••••••"
                 {...register('confirmPassword')}
                 disabled={isLoading}
               />
               {errors.confirmPassword && (
-                <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+                <p data-testid="register-confirm-password-error" className="text-sm text-red-500">{errors.confirmPassword.message}</p>
               )}
             </div>
             
@@ -152,6 +156,7 @@ export default function RegisterPage() {
                 render={({ field }) => (
                   <Checkbox
                     id="terms"
+                    data-testid="register-terms"
                     checked={field.value}
                     onCheckedChange={(checked) => field.onChange(checked === true)}
                     onBlur={field.onBlur}
@@ -178,11 +183,12 @@ export default function RegisterPage() {
               </Label>
             </div>
             {errors.terms && (
-              <p className="text-sm text-red-500">{errors.terms.message}</p>
+              <p data-testid="register-terms-error" className="text-sm text-red-500">{errors.terms.message}</p>
             )}
             
             <Button
               type="submit"
+              data-testid="register-submit"
               className="w-full"
               size="lg"
               disabled={isLoading}

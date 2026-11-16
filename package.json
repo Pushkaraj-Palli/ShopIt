@@ -10,7 +10,11 @@
     "seed:admin": "node scripts/seed-admin.js",
     "migrate:products": "node scripts/migrate-products-marketplace.js",
     "server": "node server/index.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run server\""
+    "dev:full": "concurrently \"npm run dev\" \"npm run server\"",
+    "test:e2e": "mocha -r ts-node/register tests/e2e/specs/**/*.spec.ts --timeout 60000 --reporter mochawesome",
+    "test:e2e:smoke": "mocha -r ts-node/register tests/e2e/specs/smoke.spec.ts --timeout 60000",
+    "test:e2e:headed": "cross-env HEADLESS=false mocha -r ts-node/register tests/e2e/specs/**/*.spec.ts --timeout 60000",
+    "e2e:seed": "ts-node tests/e2e/helpers/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -59,15 +63,15 @@
     "dotenv": "^16.4.5",
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
-    "eslint-config-next": "13.5.1",
+    "eslint-config-next": "14.1.0",
     "express": "^4.18.3",
     "framer-motion": "^11.0.6",
     "input-otp": "^1.2.4",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.446.0",
     "mongoose": "^8.2.0",
-    "next": "13.5.1",
-    "next-themes": "^0.3.0",
+    "next": "14.1.0",
+    "next-themes": "^0.2.1",
     "postcss": "8.4.30",
     "react": "18.2.0",
     "react-day-picker": "^8.10.1",
@@ -86,6 +90,16 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.9"
+    "@types/chai": "^4.3.20",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/mocha": "^10.0.10",
+    "@types/selenium-webdriver": "^4.35.7",
+    "chai": "^4.5.0",
+    "cross-env": "^10.1.0",
+    "mocha": "^12.0.3",
+    "mochawesome": "^8.1.1",
+    "selenium-webdriver": "^4.51.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0"
   }
 }

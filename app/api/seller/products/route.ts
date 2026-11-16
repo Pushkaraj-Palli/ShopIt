@@ -27,6 +27,8 @@ function productResponse(product: any) {
     trackInventory: product.trackInventory,
     lowStockThreshold: product.lowStockThreshold,
     allowBackorders: product.allowBackorders,
+    hasVariants: product.hasVariants,
+    variants: product.variants ?? [],
     status: product.status,
     sellerId: product.sellerId?.toString() ?? null,
     updatedAt: product.updatedAt,
@@ -67,12 +69,22 @@ export async function POST(request: NextRequest) {
     const category = await Category.findOne({ slug: parsed.data.categorySlug }).select('name slug');
     if (!category) return NextResponse.json({ error: 'Select a valid category' }, { status: 400 });
 
+    const basePrice = parsed.data.hasVariants
+      ? Math.min(...parsed.data.variants.map((variant) => variant.price))
+      : parsed.data.price!;
+    const variantStock = parsed.data.hasVariants
+      ? parsed.data.variants.reduce((total, variant) => total + variant.stockQty, 0)
+      : parsed.data.stockQty;
+    if (!Number.isSafeInteger(variantStock)) {
+      return NextResponse.json({ error: 'Combined variant stock exceeds the supported range' }, { status: 400 });
+    }
+
     const product = await Product.create({
       sellerId: auth.user.id,
       name: parsed.data.name,
       description: parsed.data.description,
-      price: parsed.data.price / 100,
-      basePrice: parsed.data.price,
+      price: basePrice / 100,
+      basePrice,
       compareAtPrice: parsed.data.compareAtPrice,
       currency: 'INR',
       category: category.name,
@@ -84,10 +96,12 @@ export async function POST(request: NextRequest) {
       image: parsed.data.image,
       images: [parsed.data.image],
       status: 'pending_review',
-      stockQty: parsed.data.stockQty,
+      stockQty: variantStock,
       trackInventory: true,
       lowStockThreshold: parsed.data.lowStockThreshold,
       allowBackorders: parsed.data.allowBackorders,
+      hasVariants: parsed.data.hasVariants,
+      variants: parsed.data.hasVariants ? parsed.data.variants : [],
     });
 
     return NextResponse.json({ product: productResponse(product) }, { status: 201 });

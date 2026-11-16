@@ -59,18 +59,18 @@ export default function CartPage() {
   
   if (cartItems.length === 0) {
     return (
-      <div className="container px-4 md:px-6 py-10">
+      <div className="container px-4 md:px-6 py-10" data-testid="empty-cart-container">
         <div className="mx-auto max-w-3xl py-10 text-center">
           <div className="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-muted">
             <ShoppingBag className="h-12 w-12 text-muted-foreground" />
           </div>
-          <h1 className="mb-4 text-3xl font-bold">Your Cart is Empty</h1>
+          <h1 className="mb-4 text-3xl font-bold" data-testid="cart-empty-message">Your Cart is Empty</h1>
           <p className="mb-8 text-muted-foreground">
             {isAuthenticated && user
               ? `Hi ${user.name}, you haven't added any products to your cart yet.`
               : "Looks like you haven't added any products to your cart yet."}
           </p>
-          <Button size="lg" asChild>
+          <Button size="lg" asChild data-testid="continue-shopping-btn">
             <Link href="/shop">Continue Shopping</Link>
           </Button>
         </div>
@@ -110,6 +110,7 @@ export default function CartPage() {
                     key={item.id}
                     variants={item}
                     exit="exit"
+                    data-testid="cart-item"
                     className="grid grid-cols-2 gap-4 border-t py-4 md:grid-cols-6 md:px-4"
                   >
                     <div className="col-span-2 flex items-center gap-4 md:col-span-3">
@@ -122,14 +123,14 @@ export default function CartPage() {
                         />
                       </div>
                       <div>
-                        <h3 className="font-medium">{item.name}</h3>
+                        <h3 data-testid="cart-item-name" className="font-medium">{item.name}</h3>
                         <p className="text-sm text-muted-foreground md:hidden">
                           {formatPrice(item.price)}
                         </p>
                       </div>
                     </div>
                     
-                    <div className="hidden items-center text-base md:flex">
+                    <div data-testid="cart-item-price" className="hidden items-center text-base md:flex">
                       {formatPrice(item.price)}
                     </div>
                     
@@ -138,16 +139,18 @@ export default function CartPage() {
                         <Button
                           variant="outline"
                           size="icon"
+                          data-testid="cart-item-qty-decrease"
                           className="h-8 w-8"
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           disabled={item.quantity <= 1}
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <div className="w-10 text-center">{item.quantity}</div>
+                        <div data-testid="cart-item-qty" className="w-10 text-center">{item.quantity}</div>
                         <Button
                           variant="outline"
                           size="icon"
+                          data-testid="cart-item-qty-increase"
                           className="h-8 w-8"
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         >
@@ -168,12 +171,13 @@ export default function CartPage() {
                       <div className="text-base font-medium md:hidden">
                         Total: {formatPrice(item.price * item.quantity)}
                       </div>
-                      <div className="hidden text-base font-medium md:block">
+                      <div data-testid="cart-item-line-total" className="hidden text-base font-medium md:block">
                         {formatPrice(item.price * item.quantity)}
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
+                        data-testid="cart-item-remove"
                         className="hidden md:flex"
                         onClick={() => removeFromCart(item.id)}
                       >
@@ -189,7 +193,7 @@ export default function CartPage() {
               <Button variant="outline" asChild>
                 <Link href="/shop">Continue Shopping</Link>
               </Button>
-              <Button variant="outline" onClick={() => clearCart()}>
+              <Button variant="outline" data-testid="clear-cart-btn" onClick={() => clearCart()}>
                 Clear Cart
               </Button>
             </div>
@@ -202,7 +206,7 @@ export default function CartPage() {
             <div className="space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span data-testid="cart-subtotal">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Shipping</span>
@@ -215,12 +219,13 @@ export default function CartPage() {
               <Separator className="my-4" />
               <div className="flex justify-between font-medium">
                 <span>Total</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span data-testid="cart-total">{formatPrice(subtotal)}</span>
               </div>
             </div>
             <Button 
               className="mt-6 w-full" 
               size="lg"
+              data-testid="checkout-btn"
               onClick={handleCheckout}
               disabled={isCheckingOut}
             >

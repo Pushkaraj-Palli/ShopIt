@@ -39,13 +39,25 @@ export async function GET(
       id: productObj._id.toString(),
       _id: productObj._id.toString(), // Keep _id for backward compatibility
       name: productObj.name,
-      price: productObj.price,
+      price: productObj.basePrice !== undefined ? productObj.basePrice / 100 : productObj.price,
       category: productObj.category,
       categorySlug: productObj.categorySlug,
       subCategory: productObj.subCategory,
       rating: productObj.rating,
       image: productObj.image,
       description: productObj.description,
+      countInStock: productObj.stockQty,
+      trackInventory: productObj.trackInventory,
+      allowBackorders: productObj.allowBackorders,
+      hasVariants: productObj.hasVariants,
+      variants: (productObj.variants ?? []).map((variant: any) => ({
+        id: variant._id.toString(),
+        sku: variant.sku,
+        options: variant.options,
+        price: variant.price / 100,
+        stockQty: variant.stockQty,
+        image: variant.image,
+      })),
     };
     
     return NextResponse.json({ 

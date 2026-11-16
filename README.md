@@ -101,6 +101,53 @@ The seed command only creates or updates the configured admin account; it does n
 
 ---
 
+## 🧪 Automation Testing with Selenium
+
+ShopIt includes an automated end-to-end Selenium test suite built with TypeScript, Mocha, Chai, and Selenium WebDriver following the **Page Object Model (POM)** architecture.
+
+### Test Structure
+```
+tests/e2e/
+  ├── config/        # Environment config & Selenium WebDriver factory
+  ├── pages/         # Page Objects (BasePage, LoginPage, RegisterPage, CartPage, etc.)
+  ├── helpers/       # DB seeding, auth injection, and test data utilities
+  └── specs/         # E2E test specifications (smoke, auth, rbac, catalogue, retailer, admin)
+```
+
+### Running Tests Locally
+
+1. **Seed Test Database:**
+   ```bash
+   npm run e2e:seed
+   ```
+   *Note: Fails fast if the target database name does not contain `test`.*
+
+2. **Run Smoke Suite (< 2 minutes):**
+   ```bash
+   npm run test:e2e:smoke
+   ```
+
+3. **Run Full E2E Suite:**
+   ```bash
+   npm run test:e2e
+   ```
+
+4. **Run in Headed Mode (see the browser in action):**
+   ```bash
+   npm run test:e2e:headed
+   ```
+
+### CI / Headless Execution
+
+In CI (e.g. GitHub Actions), tests run in headless Chrome:
+```bash
+npm run e2e:seed
+npm run test:e2e:smoke
+```
+Screenshots on test failure are saved to `reports/screenshots/` and HTML reports are written to `mochawesome-report/`.
+
+---
+
 ## ⚙️ Scripts
 
 - `npm run dev` – Start the Next.js development server.
@@ -108,6 +155,10 @@ The seed command only creates or updates the configured admin account; it does n
 - `npm run build` – Build the Next.js application.
 - `npm run start` – Start the production server.
 - `npm run lint` – Run ESLint for code linting.
+- `npm run test:e2e` – Run full Selenium E2E test suite.
+- `npm run test:e2e:smoke` – Run fast E2E smoke tests.
+- `npm run test:e2e:headed` – Run E2E tests with visible Chrome browser.
+- `npm run e2e:seed` – Seed test database with fixture data.
 
 ---
 

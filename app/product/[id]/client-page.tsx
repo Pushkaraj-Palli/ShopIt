@@ -153,7 +153,7 @@ export default function ClientPage({ initialProduct, initialError }: ProductClie
           className="flex flex-col space-y-4"
         >
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold">{initialProduct.name}</h1>
+            <h1 data-testid="product-detail-title" className="text-3xl font-bold">{initialProduct.name}</h1>
             <div className="flex items-center space-x-1">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
@@ -167,17 +167,17 @@ export default function ClientPage({ initialProduct, initialError }: ProductClie
                 ({initialProduct.numReviews} reviews)
               </span>
               <span className="text-sm font-medium text-muted-foreground">|</span>
-              <span className="text-sm text-muted-foreground">
+              <span data-testid="product-detail-stock" className="text-sm text-muted-foreground">
                 {initialProduct.countInStock} in stock
               </span>
             </div>
           </div>
           
-          <div className="text-2xl font-bold">
+          <div data-testid="product-detail-price" className="text-2xl font-bold">
             {formatPrice(initialProduct.price)}
           </div>
           
-          <p className="text-muted-foreground">
+          <p data-testid="product-detail-description" className="text-muted-foreground">
             {initialProduct.description}
           </p>
           
@@ -186,18 +186,20 @@ export default function ClientPage({ initialProduct, initialError }: ProductClie
               <Button
                 variant="ghost"
                 size="icon"
+                data-testid="product-detail-qty-decrease"
                 className="rounded-r-none"
                 onClick={handleQuantityDecrease}
                 disabled={quantity <= 1}
               >
                 <Minus className="h-4 w-4" />
               </Button>
-              <div className="flex-1 px-4 text-center">
+              <div data-testid="product-detail-qty-value" className="flex-1 px-4 text-center">
                 {quantity}
               </div>
               <Button
                 variant="ghost"
                 size="icon"
+                data-testid="product-detail-qty-increase"
                 className="rounded-l-none"
                 onClick={handleQuantityIncrease}
                 disabled={initialProduct.countInStock ? quantity >= initialProduct.countInStock : false}
@@ -207,6 +209,7 @@ export default function ClientPage({ initialProduct, initialError }: ProductClie
             </div>
             <Button
               className="flex-1"
+              data-testid="product-detail-add-to-cart"
               onClick={handleAddToCart}
             >
               <ShoppingCart className="mr-2 h-4 w-4" />

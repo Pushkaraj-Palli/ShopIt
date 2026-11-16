@@ -1,0 +1,433 @@
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import { ENV } from '../config/env';
+import User from '../../../app/models/User';
+import Category from '../../../app/models/Category';
+import Product from '../../../app/models/Product';
+import SellerProfile from '../../../app/models/SellerProfile';
+
+export const SEED_IDS = {
+  users: {
+    admin: new mongoose.Types.ObjectId('64a000000000000000000001'),
+    customer: new mongoose.Types.ObjectId('64a000000000000000000002'),
+    retailerA: new mongoose.Types.ObjectId('64a000000000000000000003'),
+    retailerB: new mongoose.Types.ObjectId('64a000000000000000000004'),
+    pending: new mongoose.Types.ObjectId('64a000000000000000000005'),
+  },
+  products: {
+    retailerA_singleStock: new mongoose.Types.ObjectId('64b000000000000000000001'),
+    retailerA_outOfStock: new mongoose.Types.ObjectId('64b000000000000000000002'),
+    retailerA_pending: new mongoose.Types.ObjectId('64b000000000000000000003'),
+    retailerA_active1: new mongoose.Types.ObjectId('64b000000000000000000004'),
+    retailerA_active2: new mongoose.Types.ObjectId('64b000000000000000000005'),
+    retailerA_active3: new mongoose.Types.ObjectId('64b000000000000000000006'),
+    retailerB_active1: new mongoose.Types.ObjectId('64b000000000000000000007'),
+    retailerB_active2: new mongoose.Types.ObjectId('64b000000000000000000008'),
+    retailerB_active3: new mongoose.Types.ObjectId('64b000000000000000000009'),
+    retailerB_active4: new mongoose.Types.ObjectId('64b000000000000000000010'),
+    retailerB_active5: new mongoose.Types.ObjectId('64b000000000000000000011'),
+  },
+  categories: {
+    electronics: new mongoose.Types.ObjectId('64c000000000000000000001'),
+    clothing: new mongoose.Types.ObjectId('64c000000000000000000002'),
+    books: new mongoose.Types.ObjectId('64c000000000000000000003'),
+  },
+};
+
+export async function seedTestDatabase() {
+  const uri = ENV.MONGODB_URI;
+  if (!uri.toLowerCase().includes('test')) {
+    throw new Error(`REFUSING to seed non-test database! MONGODB_URI must contain "test". Current URI: ${uri}`);
+  }
+
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(uri);
+  }
+
+  // Clear test collections
+  await Promise.all([
+    User.deleteMany({}),
+    Category.deleteMany({}),
+    Product.deleteMany({}),
+    SellerProfile.deleteMany({}),
+  ]);
+
+  const hashedPassword = await bcrypt.hash('Password123!', 10);
+
+  // 1. Seed Users
+  await User.insertMany([
+    {
+      _id: SEED_IDS.users.admin,
+      name: 'Test Admin',
+      email: 'admin@test.com',
+      password: hashedPassword,
+      role: 'admin',
+      status: 'active',
+      emailVerified: true,
+    },
+    {
+      _id: SEED_IDS.users.customer,
+      name: 'Test Customer',
+      email: 'customer@test.com',
+      password: hashedPassword,
+      role: 'customer',
+      status: 'active',
+      emailVerified: true,
+    },
+    {
+      _id: SEED_IDS.users.retailerA,
+      name: 'Retailer A Store',
+      email: 'retailerA@test.com',
+      password: hashedPassword,
+      role: 'retailer',
+      status: 'active',
+      emailVerified: true,
+    },
+    {
+      _id: SEED_IDS.users.retailerB,
+      name: 'Retailer B Store',
+      email: 'retailerB@test.com',
+      password: hashedPassword,
+      role: 'retailer',
+      status: 'active',
+      emailVerified: true,
+    },
+    {
+      _id: SEED_IDS.users.pending,
+      name: 'Pending Seller',
+      email: 'pending@test.com',
+      password: hashedPassword,
+      role: 'customer',
+      status: 'active',
+      emailVerified: true,
+    },
+  ]);
+
+  // 2. Seed Seller Profiles
+  await SellerProfile.insertMany([
+    {
+      userId: SEED_IDS.users.retailerA,
+      storeName: 'Alpha Tech Store',
+      slug: 'alpha-tech-store',
+      contactEmail: 'retailera@test.com',
+      contactPhone: '+91 9876543210',
+      businessAddress: '123 Market Street, Bengaluru',
+      taxId: '29ABCDE1234F1Z5',
+      status: 'approved',
+    },
+    {
+      userId: SEED_IDS.users.retailerB,
+      storeName: 'Beta Style Store',
+      slug: 'beta-style-store',
+      contactEmail: 'retailerb@test.com',
+      contactPhone: '+91 9876543211',
+      businessAddress: '456 Fashion Avenue, Mumbai',
+      taxId: '27ABCDE1234F1Z6',
+      status: 'approved',
+    },
+    {
+      userId: SEED_IDS.users.pending,
+      storeName: 'Pending Innovations',
+      slug: 'pending-innovations',
+      contactEmail: 'pending@test.com',
+      contactPhone: '+91 9876543212',
+      businessAddress: '789 Startup Hub, Delhi',
+      taxId: '07ABCDE1234F1Z7',
+      status: 'pending',
+    },
+  ]);
+
+  // 3. Seed Categories
+  await Category.insertMany([
+    {
+      _id: SEED_IDS.categories.electronics,
+      name: 'Electronics',
+      slug: 'electronics',
+      image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=800',
+      description: 'Gadgets, devices, and accessories',
+      featured: true,
+      subCategories: ['Headphones', 'Laptops', 'Wearables'],
+    },
+    {
+      _id: SEED_IDS.categories.clothing,
+      name: 'Clothing',
+      slug: 'clothing',
+      image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800',
+      description: 'Men and women apparel',
+      featured: true,
+      subCategories: ['Shirts', 'Pants', 'Jackets'],
+    },
+    {
+      _id: SEED_IDS.categories.books,
+      name: 'Books',
+      slug: 'books',
+      image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=800',
+      description: 'Fiction, non-fiction, and textbooks',
+      featured: false,
+      subCategories: ['Fiction', 'Technology'],
+    },
+  ]);
+
+  // 4. Seed Products (11 products split between retailer A and B, including stock=1, stock=0, and pending review)
+  await Product.insertMany([
+    // Retailer A Products
+    {
+      _id: SEED_IDS.products.retailerA_singleStock,
+      sellerId: SEED_IDS.users.retailerA,
+      name: 'Limited Edition Wireless Earbuds',
+      price: 1999,
+      basePrice: 199900,
+      currency: 'INR',
+      sku: 'EAR-LIM-001',
+      brand: 'SoundPulse',
+      category: 'Electronics',
+      categorySlug: 'electronics',
+      subCategory: 'Headphones',
+      rating: 4.8,
+      image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800',
+      description: 'Only 1 unit remaining in stock. High fidelity audio with noise cancellation.',
+      status: 'active',
+      stockQty: 1,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+    {
+      _id: SEED_IDS.products.retailerA_outOfStock,
+      sellerId: SEED_IDS.users.retailerA,
+      name: 'Vintage Mechanical Keyboard',
+      price: 3499,
+      basePrice: 349900,
+      currency: 'INR',
+      sku: 'KEY-VNT-002',
+      brand: 'RetroKeys',
+      category: 'Electronics',
+      categorySlug: 'electronics',
+      subCategory: 'Gadgets',
+      rating: 4.5,
+      image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800',
+      description: 'Currently sold out. Clicky mechanical switches with retro styling.',
+      status: 'active',
+      stockQty: 0,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+    {
+      _id: SEED_IDS.products.retailerA_pending,
+      sellerId: SEED_IDS.users.retailerA,
+      name: 'Smart Fitness Tracker Band',
+      price: 2499,
+      basePrice: 249900,
+      currency: 'INR',
+      sku: 'FIT-BND-003',
+      brand: 'FitPulse',
+      category: 'Electronics',
+      categorySlug: 'electronics',
+      subCategory: 'Wearables',
+      rating: 4.0,
+      image: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=800',
+      description: 'Pending review by admin before appearing in public catalogue.',
+      status: 'pending_review',
+      stockQty: 25,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+    {
+      _id: SEED_IDS.products.retailerA_active1,
+      sellerId: SEED_IDS.users.retailerA,
+      name: 'Noise-Cancelling Studio Headphones',
+      price: 4999,
+      basePrice: 499900,
+      currency: 'INR',
+      sku: 'HP-STU-004',
+      brand: 'SoundPulse',
+      category: 'Electronics',
+      categorySlug: 'electronics',
+      subCategory: 'Headphones',
+      rating: 4.9,
+      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800',
+      description: 'Over-ear studio monitor headphones with active noise cancellation.',
+      status: 'active',
+      stockQty: 50,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+    {
+      _id: SEED_IDS.products.retailerA_active2,
+      sellerId: SEED_IDS.users.retailerA,
+      name: 'Ultra-thin USB-C Hub',
+      price: 1299,
+      basePrice: 129900,
+      currency: 'INR',
+      sku: 'HUB-USBC-005',
+      brand: 'SoundPulse',
+      category: 'Electronics',
+      categorySlug: 'electronics',
+      subCategory: 'Gadgets',
+      rating: 4.2,
+      image: 'https://images.unsplash.com/photo-1625842268584-8f3296236761?w=800',
+      description: '7-in-1 USB-C Hub with HDMI 4K and 100W Power Delivery.',
+      status: 'active',
+      stockQty: 100,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+    {
+      _id: SEED_IDS.products.retailerA_active3,
+      sellerId: SEED_IDS.users.retailerA,
+      name: 'Portable Bluetooth Speaker',
+      price: 1799,
+      basePrice: 179900,
+      currency: 'INR',
+      sku: 'SPK-BT-006',
+      brand: 'SoundPulse',
+      category: 'Electronics',
+      categorySlug: 'electronics',
+      subCategory: 'Audio',
+      rating: 4.6,
+      image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800',
+      description: 'Waterproof portable bluetooth speaker with 12 hour battery life.',
+      status: 'active',
+      stockQty: 30,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+
+    // Retailer B Products
+    {
+      _id: SEED_IDS.products.retailerB_active1,
+      sellerId: SEED_IDS.users.retailerB,
+      name: 'Classic Organic Cotton T-Shirt',
+      price: 799,
+      basePrice: 79900,
+      currency: 'INR',
+      sku: 'TSH-ORG-007',
+      brand: 'BetaStyle',
+      category: 'Clothing',
+      categorySlug: 'clothing',
+      subCategory: 'Shirts',
+      rating: 4.4,
+      image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800',
+      description: '100% organic cotton breathable crewneck t-shirt.',
+      status: 'active',
+      stockQty: 80,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+    {
+      _id: SEED_IDS.products.retailerB_active2,
+      sellerId: SEED_IDS.users.retailerB,
+      name: 'Slim Fit Denim Jeans',
+      price: 1899,
+      basePrice: 189900,
+      currency: 'INR',
+      sku: 'JNS-SLM-008',
+      brand: 'BetaStyle',
+      category: 'Clothing',
+      categorySlug: 'clothing',
+      subCategory: 'Pants',
+      rating: 4.7,
+      image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=800',
+      description: 'Premium stretch denim with tailored fit and classic 5-pocket styling.',
+      status: 'active',
+      stockQty: 40,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+    {
+      _id: SEED_IDS.products.retailerB_active3,
+      sellerId: SEED_IDS.users.retailerB,
+      name: 'Casual Bomber Jacket',
+      price: 2999,
+      basePrice: 299900,
+      currency: 'INR',
+      sku: 'JKT-BMB-009',
+      brand: 'BetaStyle',
+      category: 'Clothing',
+      categorySlug: 'clothing',
+      subCategory: 'Jackets',
+      rating: 4.6,
+      image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800',
+      description: 'Water-resistant lightweight bomber jacket with rib-knit collar.',
+      status: 'active',
+      stockQty: 25,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+    {
+      _id: SEED_IDS.products.retailerB_active4,
+      sellerId: SEED_IDS.users.retailerB,
+      name: 'The Pragmatic Programmer Handbook',
+      price: 899,
+      basePrice: 89900,
+      currency: 'INR',
+      sku: 'BK-PRG-010',
+      brand: 'TechBooks',
+      category: 'Books',
+      categorySlug: 'books',
+      subCategory: 'Technology',
+      rating: 5.0,
+      image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800',
+      description: 'Essential software craftsmanship guide for modern developers.',
+      status: 'active',
+      stockQty: 15,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+    {
+      _id: SEED_IDS.products.retailerB_active5,
+      sellerId: SEED_IDS.users.retailerB,
+      name: 'Clean Code: Agile Software Craftsmanship',
+      price: 949,
+      basePrice: 94900,
+      currency: 'INR',
+      sku: 'BK-CLN-011',
+      brand: 'TechBooks',
+      category: 'Books',
+      categorySlug: 'books',
+      subCategory: 'Technology',
+      rating: 4.8,
+      image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800',
+      description: 'A handbook of agile software craftsmanship by Robert C. Martin.',
+      status: 'active',
+      stockQty: 20,
+      trackInventory: true,
+      allowBackorders: false,
+      hasVariants: false,
+      variants: [],
+    },
+  ]);
+
+  console.log('Test database seeded successfully with users, categories, products, and seller profiles.');
+}
+
+if (require.main === module) {
+  seedTestDatabase()
+    .then(() => {
+      console.log('Seeding finished.');
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('Seeding failed:', err);
+      process.exit(1);
+    });
+}

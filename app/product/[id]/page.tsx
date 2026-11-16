@@ -51,7 +51,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
         id: productObj._id.toString(),
         _id: productObj._id.toString(),
         name: productObj.name,
-        price: productObj.price,
+        price: productObj.basePrice !== undefined ? productObj.basePrice / 100 : productObj.price,
         category: productObj.category,
         categorySlug: productObj.categorySlug,
         subCategory: productObj.subCategory,
@@ -60,7 +60,18 @@ export default async function ProductPage({ params }: { params: { id: string } }
         description: productObj.description,
         // These fields are hardcoded for now
         numReviews: 12,
-        countInStock: 10,
+        countInStock: productObj.stockQty ?? 0,
+        trackInventory: productObj.trackInventory,
+        allowBackorders: productObj.allowBackorders,
+        hasVariants: productObj.hasVariants,
+        variants: (productObj.variants ?? []).map((variant: any) => ({
+          id: variant._id.toString(),
+          sku: variant.sku,
+          options: variant.options,
+          price: variant.price / 100,
+          stockQty: variant.stockQty,
+          image: variant.image,
+        })),
         features: [
           'Premium quality material',
           'Durable and long-lasting',

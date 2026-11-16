@@ -86,12 +86,13 @@ export default function LoginPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                data-testid="login-email"
                 placeholder="name@example.com"
                 {...register('email')}
                 disabled={isLoading}
               />
               {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
+                <p data-testid="login-email-error" className="text-sm text-red-500">{errors.email.message}</p>
               )}
             </div>
             
@@ -107,23 +108,25 @@ export default function LoginPage() {
               </div>
               <Input
                 id="password"
+                data-testid="login-password"
                 type="password"
                 placeholder="••••••••"
                 {...register('password')}
                 disabled={isLoading}
               />
               {errors.password && (
-                <p className="text-sm text-red-500">{errors.password.message}</p>
+                <p data-testid="login-password-error" className="text-sm text-red-500">{errors.password.message}</p>
               )}
             </div>
             
             <div className="flex items-center space-x-2">
-              <Checkbox id="rememberMe" {...register('rememberMe')} />
+              <Checkbox id="rememberMe" data-testid="login-remember" {...register('rememberMe')} />
               <Label htmlFor="rememberMe" className="font-normal">Remember me</Label>
             </div>
             
             <Button
               type="submit"
+              data-testid="login-submit"
               className="w-full"
               size="lg"
               disabled={isLoading}

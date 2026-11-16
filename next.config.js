@@ -25,6 +25,12 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      { source: '/login', destination: '/account/login' },
+      { source: '/register', destination: '/account/register' },
+    ];
+  },
 };
 
 module.exports = nextConfig;

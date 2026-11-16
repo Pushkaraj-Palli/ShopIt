@@ -126,6 +126,7 @@ export default function ClientPage({ products }: { products: Product[] }) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
+            data-testid="search-input"
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -136,6 +137,7 @@ export default function ClientPage({ products }: { products: Product[] }) {
               type="button"
               variant="ghost"
               size="sm"
+              data-testid="clear-search-btn"
               className="absolute right-0 top-0 h-full px-3"
               onClick={clearSearch}
             >
@@ -147,6 +149,7 @@ export default function ClientPage({ products }: { products: Product[] }) {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
           <select 
+            data-testid="sort-select"
             className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value)}
@@ -159,7 +162,7 @@ export default function ClientPage({ products }: { products: Product[] }) {
         </div>
       </div>
       
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-muted-foreground" data-testid="products-count">
         Showing <strong>{filteredProducts.length}</strong> products
         {searchTerm && <span> for "<strong>{searchTerm}</strong>"</span>}
         {categoryFilter && (
@@ -185,7 +188,7 @@ export default function ClientPage({ products }: { products: Product[] }) {
       {filteredProducts.length > 0 ? (
         <ProductsGrid products={filteredProducts} />
       ) : (
-        <div className="text-center py-12">
+        <div className="text-center py-12" data-testid="no-products-found">
           <h3 className="text-lg font-semibold">No products found</h3>
           <p className="text-muted-foreground mt-2">
             Try adjusting your search or filter to find what you're looking for.
